@@ -1,2 +1,2 @@
-#stem for now.
-print("TEST")
+import rethinkdb
+from my_libs import reddit_credentials
