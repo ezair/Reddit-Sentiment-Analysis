@@ -1,0 +1,26 @@
+version: '2.1'
+services:
+  db:
+    ports:
+      - "38080:8080"
+      - "38015:28015"
+      - "39015:29015"
+    image: rethinkdb:latest
+    restart: always
+    healthcheck:
+      test: "exit 0"
+      retries: 3
+      timeout: 10s
+      interval: 3s
+    volumes:
+      - ./data/rethinkdb_data/
+  app:
+    build: ./docker
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+    - .:/code
+volumes:
+  database_data:
+    driver: local
