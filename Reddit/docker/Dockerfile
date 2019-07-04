@@ -8,6 +8,9 @@ RUN chown -R mongodb:mongodb /data/db
 VOLUME ["/data/db"]
 EXPOSE 27017
 
+#Install doxygen for documentation.
+RUN apt-get install -y doxygen
+
 # Installing python3 and setting up all needed packages for it.
 FROM python:3
 ENV PYTHONUNBUFFERED 1
