@@ -1,11 +1,10 @@
 version: '2.1'
 services:
   db:
+    image: 'mongo:latest'
+    command: mongod --port 27017
     ports:
-      - "38080:8080"
-      - "38015:28015"
-      - "39015:29015"
-    image: rethinkdb:latest
+      - '27017:27017'
     restart: always
     healthcheck:
       test: "exit 0"
@@ -13,7 +12,7 @@ services:
       timeout: 10s
       interval: 3s
     volumes:
-      - ./data/rethinkdb_data/
+      - ./data/db/
   app:
     build: ./docker
     depends_on:
