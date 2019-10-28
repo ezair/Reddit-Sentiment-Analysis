@@ -2,6 +2,6 @@
 __pycache__
 data/*
 reddit_credentials.py
-/.idea/*
-html/*
-latex/*
+.idea/*
+doc/html/*
+doc/latex/*
