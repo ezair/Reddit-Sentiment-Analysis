@@ -58,12 +58,12 @@ def add_sub_reddit_to_db_file(path_to_sub_reddit_file='../sub_reddits.txt'):
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to add to.
-                                        (default: {'../sub_reddits.txt'})
+                                         (default: {'../sub_reddits.txt'})
     """
     print("func 1")
 
 
-def remove_sub_reddit_from_db_file(path_to_sub_reddit_file):
+def remove_sub_reddit_in_db_file(path_to_sub_reddit_fil='../sub_reddits.txt'):
     """
     Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
@@ -97,7 +97,7 @@ def main():
     elif command_line_argument_parser.add:
         add_sub_reddit_to_db_file()
     elif command_line_argument_parser.remove:
-        remove_sub_reddit_from_db_file()
+        remove_sub_reddit_in_db_file()
     else:
         arg_parser.print_help()
 
