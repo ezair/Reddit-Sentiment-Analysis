@@ -37,7 +37,8 @@ def get_argument_parser_containing_program_flag_information():
                                                        'When we are done with '
                                                        'collecting, we add '
                                                        'the data to the '
-                                                       'database. ')
+                                                       'database. ',
+                                                       action='store_true')
 
     argument_to_execute.add_argument('--add', help='Add the sub-reddit passed '
                                                    'in by the user '
@@ -51,19 +52,22 @@ def get_argument_parser_containing_program_flag_information():
     return parser
 
 
-def add_sub_reddit_to_db_file(path_to_sub_reddit_file='../sub_reddits.txt'):
+def add_sub_reddit_to_db_file(parsed_command_line_arguments,
+                              path_to_sub_reddit_file='sub_reddits.txt'):
     """
     Appends a sub_reddit to the end of the file that is given by the user.
 
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to add to.
-                                         (default: {'../sub_reddits.txt'})
+                                         (default: {'sub_reddits.txt'})
     """
-    print("func 1")
+    with open(path_to_sub_reddit_file, 'a') as reddit_file:
+        reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
 
 
-def remove_sub_reddit_in_db_file(path_to_sub_reddit_fil='../sub_reddits.txt'):
+def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
+                                 path_to_sub_reddit_file='sub_reddits.txt'):
     """
     Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
@@ -71,16 +75,19 @@ def remove_sub_reddit_in_db_file(path_to_sub_reddit_fil='../sub_reddits.txt'):
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to remove from.
-                                         (default: {'../sub_reddits.txt'})
+                                         (default: {'sub_reddits.txt'})
     """
-    print("func 2")
+    # We need to store the content of the file, so that we can write
+    # each line back into the it (except the one line we want to remove).
+    with open(path_to_sub_reddit_file, 'r') as f:
+        lines_in_reddit_file = f.readlines()
 
-
-# collect tweets.
-
-# load sub-reddits.
-
-# get subreddit from user.
+    # We write every line back into the file except the one we want to
+    # remove.
+    with open(path_to_sub_reddit_file, 'w') as f:
+        for line in lines_in_reddit_file:
+            if line.strip("\n") != parsed_command_line_arguments.remove:
+                f.write(line)
 
 
 def main():
@@ -94,10 +101,15 @@ def main():
 
     if command_line_argument_parser.collect:
         print("collecting...")
+        list_of_sub_reddits = [sub_reddit.strip()
+                               for sub_reddit in open('sub_reddits.txt')]
+
     elif command_line_argument_parser.add:
-        add_sub_reddit_to_db_file()
+        add_sub_reddit_to_db_file(command_line_argument_parser)
+
     elif command_line_argument_parser.remove:
-        remove_sub_reddit_in_db_file()
+        remove_sub_reddit_in_db_file(command_line_argument_parser)
+
     else:
         arg_parser.print_help()
 
