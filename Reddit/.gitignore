@@ -5,3 +5,4 @@ reddit_credentials.py
 .idea/*
 doc/html/*
 doc/latex/*
+.db/

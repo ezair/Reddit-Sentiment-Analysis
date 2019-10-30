@@ -7,6 +7,8 @@ Description: TBA
 """
 import praw
 import argparse
+from pymongo import MongoClient
+from prawcore import PrawcoreException
 from credentials.reddit_credentials import API_INSTANCE
 
 
@@ -53,7 +55,8 @@ def get_argument_parser_containing_program_flag_information():
 
 
 def add_sub_reddit_to_db_file(parsed_command_line_arguments,
-                              path_to_sub_reddit_file='sub_reddits.txt'):
+                              path_to_sub_reddit_file='sub_reddits.txt',
+                              reddit=API_INSTANCE,):
     """
     Appends a sub_reddit to the end of the file that is given by the user.
 
@@ -62,8 +65,19 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
                                          sub_reddits to add to.
                                          (default: {'sub_reddits.txt'})
     """
-    with open(path_to_sub_reddit_file, 'a') as reddit_file:
-        reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
+    try:
+        # Check to make sure that the sub_reddit actually exists.
+        reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
+
+        # Since it exists, we can add it to our file and parse from it later on.
+        with open(path_to_sub_reddit_file, 'a') as reddit_file:
+            reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
+        print("i am here")
+    # In the event that the subreddit does not exist, we land here.
+    # We can catch the exception and not print it out (this looks better than not).
+    except Exception:
+        print('Unable to add sub_reddit: "{}", it does not exist.'
+              .format(parsed_command_line_arguments.add))
 
 
 def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
@@ -90,26 +104,62 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
                 f.write(line)
 
 
-def main():
-    # Allows us to use the praw (reddit) api. (REQUIRED).
-    reddit = API_INSTANCE
+def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
+    """
+    Returns a list containing the sub_reddits that a user want to analyze
+    data off of (given from the path_to_sub_reddit_file)
 
+    Keyword Arguments:
+        path_to_sub_reddit_file {str} -- Path to the file that contains
+                                         the sub_reddits we want.
+                                         (default: {'sub_reddits.txt'})
+
+    Returns:
+        list(str) -- list of sub_reddits that we want to analyze data on.
+    """
+    return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
+
+
+def collect_data_from_sub_reddits(reddit, list_of_sub_reddits):
+    sub_reddit_posts = []
+    for sub_reddit in list_of_sub_reddits:
+        sub_reddit_posts += reddit.subreddit(sub_reddit).hot(limit=10)
+    print(sub_reddit_posts)
+    ##submissions = r.get_subreddit('opensource').get_hot(limit=5)
+#  >>> [str(x) for x in submissions]
+
+
+def add_collected_data_to_database(data, ip_address='localhost', port=27017):
+    client = MongoClient(ip_address, port)
+    database = client.reddit
+    subreddits = database.subreddits
+    print(subreddits)
+
+
+def main():
     # Contains the command line arguments that the user passed in.
     # These arguments are stored as namespace objects.
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
-    if command_line_argument_parser.collect:
-        print("collecting...")
-        list_of_sub_reddits = [sub_reddit.strip()
-                               for sub_reddit in open('sub_reddits.txt')]
+    # Allows us to use the praw (reddit) api. (REQUIRED).
+    reddit = API_INSTANCE
 
+    # Collecting data.
+    if command_line_argument_parser.collect:
+        print("Collecting...")
+        add_collected_data_to_database(
+            collect_data_from_sub_reddits(reddit, get_list_of_sub_reddits()))
+
+    # Adding a sub reddit.
     elif command_line_argument_parser.add:
         add_sub_reddit_to_db_file(command_line_argument_parser)
 
+    # Remvoing a subreddit.
     elif command_line_argument_parser.remove:
         remove_sub_reddit_in_db_file(command_line_argument_parser)
 
+    # When a user doesn't give us anything, we want to display help text.
     else:
         arg_parser.print_help()
 
