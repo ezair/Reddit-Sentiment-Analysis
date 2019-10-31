@@ -27,7 +27,6 @@ def get_argument_parser_containing_program_flag_information():
                                             the program.
     """
     parser = argparse.ArgumentParser()
-#    parser = argparse.ArgumentParser(add_help=False)
 
     # This line makes it so that the user can only choose one option of the
     # rather than being able to call both add and remove for example.
@@ -60,6 +59,13 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     """
     Appends a sub_reddit to the end of the file that is given by the user.
 
+    Arguments:
+        parsed_command_line_arguments {namespace} -- Namespace object that
+                                                     contains the values of
+                                                     each given command line
+                                                     argument that is passed
+                                                     into the program.
+
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to add to.
@@ -69,12 +75,12 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
         # Check to make sure that the sub_reddit actually exists.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
 
-        # Since it exists, we can add it to our file and parse from it later on.
+        # Since it exists, we can add it to our file and parse from it later.
         with open(path_to_sub_reddit_file, 'a') as reddit_file:
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
         print("i am here")
     # In the event that the subreddit does not exist, we land here.
-    # We can catch the exception and not print it out (this looks better than not).
+    # We can catch the exception and not print it out.
     except Exception:
         print('Unable to add sub_reddit: "{}", it does not exist.'
               .format(parsed_command_line_arguments.add))
@@ -86,6 +92,13 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
 
+    Arguments:
+        parsed_command_line_arguments {namespace} -- Namespace object that
+                                                     contains the values of
+                                                     each given command line
+                                                     argument that is passed
+                                                     into the program.
+
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to remove from.
@@ -93,15 +106,15 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     """
     # We need to store the content of the file, so that we can write
     # each line back into the it (except the one line we want to remove).
-    with open(path_to_sub_reddit_file, 'r') as f:
-        lines_in_reddit_file = f.readlines()
+    with open(path_to_sub_reddit_file, 'r') as reddit_file:
+        lines_in_reddit_file = reddit_file.readlines()
 
     # We write every line back into the file except the one we want to
     # remove.
-    with open(path_to_sub_reddit_file, 'w') as f:
+    with open(path_to_sub_reddit_file, 'w') as reddit_file:
         for line in lines_in_reddit_file:
             if line.strip("\n") != parsed_command_line_arguments.remove:
-                f.write(line)
+                reddit_file.write(line)
 
 
 def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
@@ -125,15 +138,12 @@ def collect_data_from_sub_reddits(reddit, list_of_sub_reddits):
     for sub_reddit in list_of_sub_reddits:
         sub_reddit_posts += reddit.subreddit(sub_reddit).hot(limit=10)
     print(sub_reddit_posts)
-    ##submissions = r.get_subreddit('opensource').get_hot(limit=5)
-#  >>> [str(x) for x in submissions]
 
 
 def add_collected_data_to_database(data, ip_address='localhost', port=27017):
     client = MongoClient(ip_address, port)
     database = client.reddit
-    subreddits = database.subreddits
-    print(subreddits)
+    sub_reddits = database.subreddits
 
 
 def main():

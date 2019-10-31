@@ -1,28 +1,25 @@
 version: '3.7'
 services:
-  # db:
-  #   build:
-  #     context: ./docker
-  #     target: base
-  #   image: 'mongo:latest'
-  #   command: mongod --port 27017
-  #   ports:
-  #     - '27017:27017'
-  #   restart: always
-  #   healthcheck:
-  #     test: "exit 0"
-  #     retries: 3
-  #     timeout: 10s
-  #     interval: 3s
-  #   volumes:
-  #     - .db:/data/db/
+  db:
+    build:
+      context: ./docker
+      target: base
+    image: 'mongo:latest'
+    command: mongod --port 27017
+    ports:
+      - '27017:27017'
+    restart: always
+    healthcheck:
+      test: "exit 0"
+      retries: 3
+      timeout: 10s
+      interval: 3s
+    volumes:
+      - .db:/data/db/
    app:
     build:
       context: ./docker
       target: py
-    # depends_on:
-    #   db:
-    #     condition: service_healthy
     volumes:
       - ./:/code/
 volumes:
