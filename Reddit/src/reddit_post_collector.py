@@ -1,14 +1,15 @@
 """
-Author:	eric zair
-File: collect.py
-Description: TBA
+@Author Eric Zair
+@File collect.py
+@Description: This program uses the praw (reddit api) to parse data from
+              given sub-reddits. These sub-reddits are located in a file
+              called "sub_reddits.txt" and the user can add and remove
+              sub_reddits to the program via the program flags.
 
-@doxyfile
+@package docstring
 """
-import praw
 import argparse
 from pymongo import MongoClient
-from prawcore import PrawcoreException
 from credentials.reddit_credentials import API_INSTANCE
 
 
@@ -133,10 +134,11 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
-def collect_data_from_sub_reddits(reddit, list_of_sub_reddits):
+def collect_data_from_sub_reddits(list_of_sub_reddits,
+                                  reddit_api=API_INSTANCE):
     sub_reddit_posts = []
     for sub_reddit in list_of_sub_reddits:
-        sub_reddit_posts += reddit.subreddit(sub_reddit).hot(limit=10)
+        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=10)
     print(sub_reddit_posts)
 
 
@@ -152,14 +154,11 @@ def main():
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
-    # Allows us to use the praw (reddit) api. (REQUIRED).
-    reddit = API_INSTANCE
-
     # Collecting data.
     if command_line_argument_parser.collect:
         print("Collecting...")
         add_collected_data_to_database(
-            collect_data_from_sub_reddits(reddit, get_list_of_sub_reddits()))
+            collect_data_from_sub_reddits(get_list_of_sub_reddits()))
 
     # Adding a sub reddit.
     elif command_line_argument_parser.add:
