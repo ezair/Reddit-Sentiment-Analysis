@@ -16,12 +16,13 @@ services:
       interval: 3s
     volumes:
       - .db:/data/db/
-   app:
+  app:
     build:
       context: ./docker
       target: py
     volumes:
       - ./:/code/
+
 volumes:
   database_data:
     driver: local

@@ -15,7 +15,7 @@ EXPOSE 27017
 # Installing python3 and setting up all needed packages for it.
 FROM python:3 as py
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /code/
+RUN mkdir -p /code/
 WORKDIR /code/
 COPY requirements.txt .
 RUN pip install -U setuptools \
