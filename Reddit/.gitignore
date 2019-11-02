@@ -1,8 +1,8 @@
 .DS_STORE
 __pycache__
-data/*
+data/
 reddit_credentials.py
 .idea/*
-doc/html/*
-doc/latex/*
+doc/html/
+doc/latex/
 .db/

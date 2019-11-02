@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as base
+FROM ubuntu:18.04
 
 # Installing mongodb.
 RUN apt-get update && apt-get install -y gnupg2
@@ -13,11 +13,12 @@ EXPOSE 27017
 # RUN apt-get install -y doxygen
 
 # Installing python3 and setting up all needed packages for it.
-FROM python:3 as py
+FROM python:3
 ENV PYTHONUNBUFFERED 1
 RUN mkdir -p /code/
 WORKDIR /code/
 COPY requirements.txt .
-RUN pip install -U setuptools \
-    && pip install --upgrade pippip install -r requirements.txt
+RUN pip install -U setuptools
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 COPY . /code/

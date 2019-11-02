@@ -40,7 +40,7 @@ def get_argument_parser_containing_program_flag_information():
                                                        'collecting, we add '
                                                        'the data to the '
                                                        'database. ',
-                                                       action='store_true')
+                                     action='store_true')
 
     argument_to_execute.add_argument('--add', help='Add the sub-reddit passed '
                                                    'in by the user '
@@ -134,18 +134,77 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
-def collect_data_from_sub_reddits(list_of_sub_reddits,
-                                  reddit_api=API_INSTANCE):
+def get_collected_data_from_sub_reddits(list_of_sub_reddits,
+                                        reddit_api=API_INSTANCE):
+    """
+    Given a list of sub-reddits from the user, we add all the comments
+    made by reddit users to a list and then return it.
+
+    Arguments:
+        list_of_sub_reddits {list(str)} -- Contains the names of all the
+                                           sub-reddits that a user wants
+                                           to parse comments from.
+
+    Keyword Arguments:
+        reddit_api {Reddit} -- API_INSTANCE required to use the program
+                               (default: {API_INSTANCE})
+
+    Returns:
+        [type] -- [description]
+    """
+    # Cool, we can now load up submissions from the sub-reddits that the
+    # wants to collect data from.
     sub_reddit_posts = []
     for sub_reddit in list_of_sub_reddits:
-        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=10)
-    print(sub_reddit_posts)
+        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=500)
+
+    # Awesome, time to grab all of the comments, because we will later
+    # want to add them into a mongo db_database.
+    reddit_comments_from_given_sub_reddits = []
+    for reddit_submission in sub_reddit_posts:
+        for comment in reddit_submission.comments:
+            reddit_comments_from_given_sub_reddits.append(comment)
+    return reddit_comments_from_given_sub_reddits
 
 
-def add_collected_data_to_database(data, ip_address='localhost', port=27017):
-    client = MongoClient(ip_address, port)
+def add_collected_data_to_database(reddit_comments, ip_address='localhost',
+                                   port=27017):
+    try:
+        client = MongoClient(ip_address, port)
+    except Exception:
+        raise SystemExit('Error connecting to database, please make sure that '
+                         'the database exists and that the correct '
+                         'information was given.')
+    # This is the particular database that we want to add records to.
     database = client.reddit
-    sub_reddits = database.subreddits
+
+    # This object is required, so that we can actually insert records.
+    collection = database.reddit_comment
+
+    for reddit_comment in reddit_comments:
+        # These are the fields that we want the reddit_comments in the
+        # database to have.
+        reddit_comment = {
+            'author': reddit_comment.author,
+            'body': reddit_comment.body,
+            'created_at': reddit_comment.created_utc,
+            'distinguished': reddit_comment.distinguished,
+            'edited': reddit_comment.edited,
+            'id': reddit_comment.id,
+            'is_submitter': reddit_comment.is_submitter,
+            'link_id': reddit_comment.link_id,
+            'parent_id': reddit_comment.parent_id,
+            'replies': reddit_comment.replies,
+            'score': reddit_comment.score,
+            'stickied': reddit_comment.stickied,
+            'submission': reddit_comment.submission,
+            'subreddit': reddit_comment.subreddit,
+            'subreddit_id': reddit_comment.subreddit_id
+        }
+
+        # YAY, the record is now in the database :)
+        collection.insert_one(reddit_comment)
+        print("Collections have been added to database.")
 
 
 def main():
@@ -156,15 +215,15 @@ def main():
 
     # Collecting data.
     if command_line_argument_parser.collect:
-        print("Collecting...")
+        print("Collecting data...")
         add_collected_data_to_database(
-            collect_data_from_sub_reddits(get_list_of_sub_reddits()))
+            get_collected_data_from_sub_reddits(get_list_of_sub_reddits()))
 
     # Adding a sub reddit.
     elif command_line_argument_parser.add:
         add_sub_reddit_to_db_file(command_line_argument_parser)
 
-    # Remvoing a subreddit.
+    # Removing a subreddit.
     elif command_line_argument_parser.remove:
         remove_sub_reddit_in_db_file(command_line_argument_parser)
 

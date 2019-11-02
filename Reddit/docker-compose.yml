@@ -1,9 +1,6 @@
-version: '3.7'
+version: '2.1'
 services:
   db:
-    build:
-      context: ./docker
-      target: base
     image: 'mongo:latest'
     command: mongod --port 27017
     ports:
@@ -16,13 +13,14 @@ services:
       interval: 3s
     volumes:
       - .db:/data/db/
-  app:
-    build:
-      context: ./docker
-      target: py
-    volumes:
-      - ./:/code/
 
+  app:
+    build: docker
+    volumes:
+      - .:/code
+    depends_on:
+      db:
+        condition: service_healthy
 volumes:
   database_data:
     driver: local
