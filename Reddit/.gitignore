@@ -1,8 +1,16 @@
-.DS_STORE
+
+# Uneeded files that don't help the project at all.
 __pycache__
-data/
-reddit_credentials.py
+.vscode
 .idea/*
+
+# Bulky documentation the user can generate if they want.
 doc/html/
 doc/latex/
+
+# They don't need our docker db.
 .db/
+.DS_STORE
+
+# No way that we want these getting out.
+credentials/*

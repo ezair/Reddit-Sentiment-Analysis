@@ -9,8 +9,8 @@ RUN mkdir -p /data/db
 RUN chown -R mongodb:mongodb /data/db/
 EXPOSE 27017
 
-#Install doxygen for documentation.
-# RUN apt-get install -y doxygen
+# Doxygen install (nice for if use wants to generate documentation)
+RUN apt-get install -y doxygen
 
 # Installing python3 and setting up all needed packages for it.
 FROM python:3

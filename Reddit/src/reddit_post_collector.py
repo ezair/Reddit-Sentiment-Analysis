@@ -9,11 +9,10 @@
 @package docstring
 """
 import argparse
-from pymongo import MongoClient
 from credentials.reddit_credentials import API_INSTANCE
+from credentials.mongo_credentials import db_collection
 
 
-# Handle argparsing.
 def get_argument_parser_containing_program_flag_information():
     """
     Returns Loads up an argument_parser object with the value that the
@@ -156,7 +155,7 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
     # wants to collect data from.
     sub_reddit_posts = []
     for sub_reddit in list_of_sub_reddits:
-        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=500)
+        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=5)
 
     # Awesome, time to grab all of the comments, because we will later
     # want to add them into a mongo db_database.
@@ -167,45 +166,31 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
     return reddit_comments_from_given_sub_reddits
 
 
-def add_collected_data_to_database(reddit_comments, ip_address='localhost',
+def add_collected_data_to_database(reddit_post_comments,
+                                   ip_address='localhost',
                                    port=27017):
-    try:
-        client = MongoClient(ip_address, port)
-    except Exception:
-        raise SystemExit('Error connecting to database, please make sure that '
-                         'the database exists and that the correct '
-                         'information was given.')
-    # This is the particular database that we want to add records to.
-    database = client.reddit
-
-    # This object is required, so that we can actually insert records.
-    collection = database.reddit_comment
-
-    for reddit_comment in reddit_comments:
+    for post_comment in reddit_post_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
-        reddit_comment = {
-            'author': reddit_comment.author,
-            'body': reddit_comment.body,
-            'created_at': reddit_comment.created_utc,
-            'distinguished': reddit_comment.distinguished,
-            'edited': reddit_comment.edited,
-            'id': reddit_comment.id,
-            'is_submitter': reddit_comment.is_submitter,
-            'link_id': reddit_comment.link_id,
-            'parent_id': reddit_comment.parent_id,
-            'replies': reddit_comment.replies,
-            'score': reddit_comment.score,
-            'stickied': reddit_comment.stickied,
-            'submission': reddit_comment.submission,
-            'subreddit': reddit_comment.subreddit,
-            'subreddit_id': reddit_comment.subreddit_id
+        post_comment_data = {
+            'author': post_comment.author,
+            'body': post_comment.body,
+            'created_at': post_comment.created_utc,
+            'distinguished': post_comment.distinguished,
+            'edited': post_comment.edited,
+            'id': post_comment.id,
+            'is_submitter': post_comment.is_submitter,
+            'link_id': post_comment.link_id,
+            'parent_id': post_comment.parent_id,
+            'replies': post_comment.replies,
+            'score': post_comment.score,
+            'stickied': post_comment.stickied,
+            'submission': post_comment.submission,
+            'subreddit': post_comment.subreddit,
+            'subreddit_id': post_comment.subreddit_id
         }
-
-        # YAY, the record is now in the database :)
-        collection.insert_one(reddit_comment)
-        print("Collections have been added to database.")
-
+        db_collection.insert_one(dict(post_comment_data))
+    # db_collection.close()
 
 def main():
     # Contains the command line arguments that the user passed in.
