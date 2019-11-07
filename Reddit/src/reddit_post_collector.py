@@ -10,7 +10,7 @@
 """
 import argparse
 from credentials.reddit_credentials import API_INSTANCE
-from credentials.mongo_credentials import db_collection
+from credentials.mongo_credentials import DB_COLLECTION
 
 
 def get_argument_parser_containing_program_flag_information():
@@ -167,18 +167,22 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
 
 
 def add_collected_data_to_database(reddit_post_comments,
-                                   ip_address='localhost',
-                                   port=27017):
+                                   db_collection=DB_COLLECTION):
     for post_comment in reddit_post_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
+
+        # TODO Currently working on this section rn.
+        #      As it currently stands, I need to change the types of the
+        #      given data, os that it can be inserted into the database
+        #      properly.
         post_comment_data = {
-            'author': post_comment.author,
-            'body': post_comment.body,
+            'author': str(post_comment.author),
+            'body': str(post_comment.body),
             'created_at': post_comment.created_utc,
             'distinguished': post_comment.distinguished,
             'edited': post_comment.edited,
-            'id': post_comment.id,
+            '_id': post_comment.id,
             'is_submitter': post_comment.is_submitter,
             'link_id': post_comment.link_id,
             'parent_id': post_comment.parent_id,
@@ -189,8 +193,10 @@ def add_collected_data_to_database(reddit_post_comments,
             'subreddit': post_comment.subreddit,
             'subreddit_id': post_comment.subreddit_id
         }
+
         db_collection.insert_one(dict(post_comment_data))
     # db_collection.close()
+
 
 def main():
     # Contains the command line arguments that the user passed in.
