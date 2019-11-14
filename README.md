@@ -4,7 +4,7 @@
 
 ### Docker
 
-## APIS used (non-stanard libs)
+## APIS used (non-standard libs)
 
 ### pymongo
 
