@@ -13,6 +13,8 @@ import webbrowser
 
 
 def main():
+
+
     """
     Build doxygen documention and then open the index webpage.
 
