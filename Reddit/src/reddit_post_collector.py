@@ -224,7 +224,7 @@ def main():
     
     print ("i should not get this line to be pushed")
     
-    if(7):
+    
         print("Testing integration and hoping it works.")
 
 
