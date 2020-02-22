@@ -13,8 +13,6 @@ import webbrowser
 
 
 def main():
-
-
     """
     Build doxygen documention and then open the index webpage.
 
@@ -22,6 +20,7 @@ def main():
         SystemExit: If doxyfile cannot be found.
         SystemExit: if index.html cannot be found.
     """
+
     doxyfile_location = 'doc/Doxyfile'
     index_html_location = 'doc/html/index.html'
 

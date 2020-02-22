@@ -26,6 +26,7 @@ def get_argument_parser_containing_program_flag_information():
                                             argument that the user passed into
                                             the program.
     """
+
     parser = argparse.ArgumentParser()
 
     # This line makes it so that the user can only choose one option of the
@@ -71,6 +72,7 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
                                          sub_reddits to add to.
                                          (default: {'sub_reddits.txt'})
     """
+
     try:
         # Check to make sure that the sub_reddit actually exists.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
@@ -104,6 +106,7 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
                                          sub_reddits to remove from.
                                          (default: {'sub_reddits.txt'})
     """
+
     # We need to store the content of the file, so that we can write
     # each line back into the it (except the one line we want to remove).
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
@@ -130,6 +133,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
     Returns:
         list(str) -- list of sub_reddits that we want to analyze data on.
     """
+
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
@@ -195,7 +199,7 @@ def add_collected_data_to_database(reddit_post_comments,
         }
 
         db_collection.insert_one(dict(post_comment_data))
-    # db_collection.close()
+    db_collection.close()
 
 
 def main():
@@ -221,12 +225,6 @@ def main():
     # When a user doesn't give us anything, we want to display help text.
     else:
         arg_parser.print_help()
-    
-    print ("i should not get this line to be pushed")
-    
-    
-        print("Testing integration and hoping it works.")
-
 
 
 if __name__ == '__main__':

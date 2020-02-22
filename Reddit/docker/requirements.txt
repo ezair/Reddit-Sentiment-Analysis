@@ -4,4 +4,3 @@ pymongo
 praw
 doxypypy
 graphviz
-tensorflow
