@@ -172,14 +172,23 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
 
 def add_collected_data_to_database(reddit_post_comments,
                                    db_collection=DB_COLLECTION):
+    """
+    Put every reddit comment contained in "reddit_post_comments" into
+    the given mongo db database collection.
+
+    Arguments:
+        reddit_post_comments {list} -- Contains reddit_comments for a
+                                       particular post stored in strings.
+
+    Keyword Arguments:
+        db_collection {mongoDB Database} -- The database that we are putting
+                                            all of the reddit comments in.
+                                            (default: {DB_COLLECTION})
+    """
+
     for post_comment in reddit_post_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
-
-        # TODO Currently working on this section rn.
-        # As it currently stands, I need to change the types of the
-        # given data, so that it can be inserted into the database
-        # properly.
         post_comment_data = {
             'author': post_comment.author,
             'body': post_comment.body,
