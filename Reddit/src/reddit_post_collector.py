@@ -177,12 +177,12 @@ def add_collected_data_to_database(reddit_post_comments,
         # database to have.
 
         # TODO Currently working on this section rn.
-        #      As it currently stands, I need to change the types of the
-        #      given data, os that it can be inserted into the database
-        #      properly.
+        # As it currently stands, I need to change the types of the
+        # given data, so that it can be inserted into the database
+        # properly.
         post_comment_data = {
-            'author': str(post_comment.author),
-            'body': str(post_comment.body),
+            'author': post_comment.author,
+            'body': post_comment.body,
             'created_at': post_comment.created_utc,
             'distinguished': post_comment.distinguished,
             'edited': post_comment.edited,
@@ -197,7 +197,6 @@ def add_collected_data_to_database(reddit_post_comments,
             'subreddit': post_comment.subreddit,
             'subreddit_id': post_comment.subreddit_id
         }
-
         db_collection.insert_one(dict(post_comment_data))
     db_collection.close()
 
