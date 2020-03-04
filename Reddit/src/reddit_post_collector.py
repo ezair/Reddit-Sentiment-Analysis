@@ -26,6 +26,7 @@ def get_argument_parser_containing_program_flag_information():
                                             argument that the user passed into
                                             the program.
     """
+
     parser = argparse.ArgumentParser()
 
     # This line makes it so that the user can only choose one option of the
@@ -71,6 +72,7 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
                                          sub_reddits to add to.
                                          (default: {'sub_reddits.txt'})
     """
+
     try:
         # Check to make sure that the sub_reddit actually exists.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
@@ -104,6 +106,7 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
                                          sub_reddits to remove from.
                                          (default: {'sub_reddits.txt'})
     """
+
     # We need to store the content of the file, so that we can write
     # each line back into the it (except the one line we want to remove).
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
@@ -130,6 +133,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
     Returns:
         {list(str)} -- list of sub_reddits that we want to analyze data on.
     """
+
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
@@ -169,18 +173,26 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
 
 def add_collected_data_to_database(reddit_post_comments,
                                    db_collection=DB_COLLECTION):
+    """
+    Put every reddit comment contained in "reddit_post_comments" into
+    the given mongo db database collection.
+
+    Arguments:
+        reddit_post_comments {list} -- Contains reddit_comments for a
+                                       particular post stored in strings.
+
+    Keyword Arguments:
+        db_collection {mongoDB Database} -- The database that we are putting
+                                            all of the reddit comments in.
+                                            (default: {DB_COLLECTION})
+    """
 
     for post_comment in reddit_post_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
-
-        # TODO Currently working on this section rn.
-        #      As it currently stands, I need to change the types of the
-        #      given data, os that it can be inserted into the database
-        #      properly.
         post_comment_data = {
-            'author': str(post_comment.author),
-            'body': str(post_comment.body),
+            'author': post_comment.author,
+            'body': post_comment.body,
             'created_at': post_comment.created_utc,
             'distinguished': post_comment.distinguished,
             'edited': post_comment.edited,
@@ -195,7 +207,6 @@ def add_collected_data_to_database(reddit_post_comments,
             'subreddit': post_comment.subreddit,
             'subreddit_id': post_comment.subreddit_id
         }
-
         db_collection.insert_one(dict(post_comment_data))
     db_collection.close()
 
