@@ -9,8 +9,8 @@
 @package docstring
 """
 import argparse
-from credentials.reddit_credentials import API_INSTANCE
-from credentials.mongo_credentials import DB_COLLECTION
+from .credentials.reddit_credentials import API_INSTANCE
+from .credentials.mongo_credentials import DB_COLLECTION
 
 
 def get_argument_parser_containing_program_flag_information():
@@ -128,7 +128,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
                                          (default: {'sub_reddits.txt'})
 
     Returns:
-        list(str) -- list of sub_reddits that we want to analyze data on.
+        {list(str)} -- list of sub_reddits that we want to analyze data on.
     """
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
@@ -149,25 +149,27 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
                                (default: {API_INSTANCE})
 
     Returns:
-        [type] -- [description]
+        {list(str)} -- List containing all comments from our the subreddits
+                       that the user has in their sub reddit file.
     """
+
     # Cool, we can now load up submissions from the sub-reddits that the
     # wants to collect data from.
-    sub_reddit_posts = []
-    for sub_reddit in list_of_sub_reddits:
-        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=5)
+    sub_reddit_posts = [reddit_api.subreddit(sub_reddit).hot(limit=5)
+                        for sub_reddit in list_of_sub_reddits]
 
     # Awesome, time to grab all of the comments, because we will later
     # want to add them into a mongo db_database.
-    reddit_comments_from_given_sub_reddits = []
-    for reddit_submission in sub_reddit_posts:
-        for comment in reddit_submission.comments:
-            reddit_comments_from_given_sub_reddits.append(comment)
-    return reddit_comments_from_given_sub_reddits
+    return [
+        comment
+        for reddit_submission in sub_reddit_posts
+        for comment in reddit_submission.comments
+    ]
 
 
 def add_collected_data_to_database(reddit_post_comments,
                                    db_collection=DB_COLLECTION):
+
     for post_comment in reddit_post_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
@@ -195,7 +197,7 @@ def add_collected_data_to_database(reddit_post_comments,
         }
 
         db_collection.insert_one(dict(post_comment_data))
-    # db_collection.close()
+    db_collection.close()
 
 
 def main():
