@@ -1,6 +1,8 @@
+# Just for those peopl that want to keep the style letgit.
 pylint
 pylint_runner
+
+## These are required for the project.
 pymongo
 praw
-doxypypy
 graphviz

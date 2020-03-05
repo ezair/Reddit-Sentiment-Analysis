@@ -9,8 +9,8 @@
 @package docstring
 """
 import argparse
-from .credentials.reddit_credentials import API_INSTANCE
-from .credentials.mongo_credentials import DB_COLLECTION
+from credentials.reddit_credentials import API_INSTANCE
+from credentials.mongo_credentials import DB_COLLECTION
 
 
 def get_argument_parser_containing_program_flag_information():
@@ -56,7 +56,7 @@ def get_argument_parser_containing_program_flag_information():
 
 def add_sub_reddit_to_db_file(parsed_command_line_arguments,
                               path_to_sub_reddit_file='sub_reddits.txt',
-                              reddit=API_INSTANCE,):
+                              reddit=API_INSTANCE):
     """
     Appends a sub_reddit to the end of the file that is given by the user.
 
@@ -74,15 +74,12 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     """
 
     try:
-        # Check to make sure that the sub_reddit actually exists.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
-
-        # Since it exists, we can add it to our file and parse from it later.
         with open(path_to_sub_reddit_file, 'a') as reddit_file:
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
         print("i am here")
+
     # In the event that the subreddit does not exist, we land here.
-    # We can catch the exception and not print it out.
     except Exception:
         print('Unable to add sub_reddit: "{}", it does not exist.'
               .format(parsed_command_line_arguments.add))
@@ -159,27 +156,29 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
 
     # Cool, we can now load up submissions from the sub-reddits that the
     # wants to collect data from.
-    sub_reddit_posts = [reddit_api.subreddit(sub_reddit).hot(limit=5)
-                        for sub_reddit in list_of_sub_reddits]
+    sub_reddit_posts = []
+    for sub_reddit in list_of_sub_reddits:
+        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=5)
 
-    # Awesome, time to grab all of the comments, because we will later
+    # Awesome, time to grab all of the comment objects, because we will later
     # want to add them into a mongo db_database.
-    return [
+    reddit_comments_from_given_sub_reddits = [
         comment
         for reddit_submission in sub_reddit_posts
         for comment in reddit_submission.comments
     ]
+    return reddit_comments_from_given_sub_reddits
 
 
-def add_collected_data_to_database(reddit_post_comments,
+def add_collected_data_to_database(reddit_submission_comments,
                                    db_collection=DB_COLLECTION):
     """
-    Put every reddit comment contained in "reddit_post_comments" into
+    Put every reddit comment contained in "reddit_submission_comments" into
     the given mongo db database collection.
 
     Arguments:
-        reddit_post_comments {list} -- Contains reddit_comments for a
-                                       particular post stored in strings.
+        reddit_submission_comments {list} -- Contains reddit_comments for a
+                                            particular post stored in strings.
 
     Keyword Arguments:
         db_collection {mongoDB Database} -- The database that we are putting
@@ -187,27 +186,28 @@ def add_collected_data_to_database(reddit_post_comments,
                                             (default: {DB_COLLECTION})
     """
 
-    for post_comment in reddit_post_comments:
+    for submission_comment in reddit_submission_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
-        post_comment_data = {
-            'author': post_comment.author,
-            'body': post_comment.body,
-            'created_at': post_comment.created_utc,
-            'distinguished': post_comment.distinguished,
-            'edited': post_comment.edited,
-            '_id': post_comment.id,
-            'is_submitter': post_comment.is_submitter,
-            'link_id': post_comment.link_id,
-            'parent_id': post_comment.parent_id,
-            'replies': post_comment.replies,
-            'score': post_comment.score,
-            'stickied': post_comment.stickied,
-            'submission': post_comment.submission,
-            'subreddit': post_comment.subreddit,
-            'subreddit_id': post_comment.subreddit_id
+        submission_comment_data = {
+            'author': str(submission_comment.author),
+            'body': str(submission_comment.body),
+            'created_at': submission_comment.created_utc,
+            'distinguished': submission_comment.distinguished,
+            'edited': submission_comment.edited,
+            '_id': submission_comment.id,
+            'is_submitter': submission_comment.is_submitter,
+            'link_id': submission_comment.link_id,
+            'parent_id': submission_comment.parent_id,
+            'replies': submission_comment.replies,
+            'score': submission_comment.score,
+            'stickied': submission_comment.stickied,
+            'submission': submission_comment.submission,
+            'subreddit': submission_comment.subreddit,
+            'subreddit_id': submission_comment.subreddit_id
         }
-        db_collection.insert_one(dict(post_comment_data))
+        db_collection.insert_one(submission_comment_data)
+
     db_collection.close()
 
 

@@ -3,6 +3,7 @@
 __pycache__
 .vscode
 .idea/*
+.history
 
 # Bulky documentation the user can generate if they want.
 doc/html/
