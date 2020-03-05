@@ -9,6 +9,7 @@
 @package docstring
 """
 import argparse
+import bson.objectid.ObjectId
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
@@ -189,22 +190,39 @@ def add_collected_data_to_database(reddit_submission_comments,
     for submission_comment in reddit_submission_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
+        print(submission_comment.author)
+        print(submission_comment.body)
+        print(submission_comment.created_utc)
+        print(submission_comment.distinguished)
+        print(submission_comment.edited)
+        print(submission_comment.id)
+        print(submission_comment.is_submitter)
+        print(submission_comment.link_id)
+        print(submission_comment.parent_id)
+        for x in submission_comment.replies:
+            print(x)
+        print(submission_comment.score)
+        print(submission_comment.stickied)
+        print(submission_comment.submission)
+        print(submission_comment.subreddit)
+        print(submission_comment.subreddit_id)
+        
         submission_comment_data = {
-            'author': str(submission_comment.author),
-            'body': str(submission_comment.body),
+            'author': submission_comment.author,
+            'body': submission_comment.body,
             'created_at': submission_comment.created_utc,
             'distinguished': submission_comment.distinguished,
-            'edited': submission_comment.edited,
-            '_id': submission_comment.id,
+            'edited': str(submission_comment.edited),
+            '_id': str(submission_comment.id),
             'is_submitter': submission_comment.is_submitter,
-            'link_id': submission_comment.link_id,
-            'parent_id': submission_comment.parent_id,
-            'replies': submission_comment.replies,
+            'link_id': str(submission_comment.link_id),
+            'parent_id': str(submission_comment.parent_id),
+            # 'replies': submission_comment.replies,
             'score': submission_comment.score,
             'stickied': submission_comment.stickied,
-            'submission': submission_comment.submission,
-            'subreddit': submission_comment.subreddit,
-            'subreddit_id': submission_comment.subreddit_id
+            'submission': str(submission_comment.submission),
+            'subreddit': str(submission_comment.subreddit),
+            'subreddit_id': str(submission_comment.subreddit_id)
         }
         db_collection.insert_one(submission_comment_data)
 
