@@ -8,6 +8,7 @@
 
 @package docstring
 """
+import argparse
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
