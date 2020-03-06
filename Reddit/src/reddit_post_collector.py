@@ -189,45 +189,47 @@ def add_collected_data_to_database(reddit_submission_comments,
     for submission_comment in reddit_submission_comments:
         # These are the fields that we want the reddit_comments in the
         # database to have.
-        print(submission_comment.author)
-        print(submission_comment.body)
-        print(submission_comment.created_utc)
-        print(submission_comment.distinguished)
-        print(submission_comment.edited)
-        print(submission_comment.id)
-        print(submission_comment.is_submitter)
-        print(submission_comment.link_id)
-        print(submission_comment.parent_id)
+        print("POST__________________________________________________\n")
+        print("Author:", submission_comment.author)
+        print("Comment Body:", submission_comment.body)
+        print("Created at:", submission_comment.created_utc)
+        # print(submission_comment.distinguished)
+        print("Edited:", submission_comment.edited)
+        print("Comment id:", submission_comment.id)
+        # print(submission_comment.is_submitter)
+        print("Link ID:", submission_comment.link_id)
+        print("Comments from previous submission:",
+              submission_comment.parent_id)
         for x in submission_comment.replies:
             print(x)
-        print(submission_comment.score)
+        print("Rating:", submission_comment.score)
         print(submission_comment.stickied)
-        print(submission_comment.submission)
-        print(submission_comment.subreddit)
-        print(submission_comment.subreddit_id)
+        print("submission:", submission_comment.submission)
+        print("Subreddit:", submission_comment.subreddit)
+        # print(submission_comment.subreddit_id)
+        print("\n")
+        # exit()
 
-        exit()
+    #     submission_comment_data = {
+    #         'author': submission_comment.author,
+    #         'body': submission_comment.body,
+    #         'created_at': submission_comment.created_utc,
+    #         'distinguished': submission_comment.distinguished,
+    #         'edited': str(submission_comment.edited),
+    #         '_id': str(submission_comment.id),
+    #         'is_submitter': submission_comment.is_submitter,
+    #         'link_id': str(submission_comment.link_id),
+    #         'parent_id': str(submission_comment.parent_id),
+    #         # 'replies': submission_comment.replies,
+    #         'score': submission_comment.score,
+    #         'stickied': submission_comment.stickied,
+    #         'submission': str(submission_comment.submission),
+    #         'subreddit': str(submission_comment.subreddit),
+    #         'subreddit_id': str(submission_comment.subreddit_id)
+    #     }
+    #     db_collection.insert_one(submission_comment_data)
 
-        submission_comment_data = {
-            'author': submission_comment.author,
-            'body': submission_comment.body,
-            'created_at': submission_comment.created_utc,
-            'distinguished': submission_comment.distinguished,
-            'edited': str(submission_comment.edited),
-            '_id': str(submission_comment.id),
-            'is_submitter': submission_comment.is_submitter,
-            'link_id': str(submission_comment.link_id),
-            'parent_id': str(submission_comment.parent_id),
-            # 'replies': submission_comment.replies,
-            'score': submission_comment.score,
-            'stickied': submission_comment.stickied,
-            'submission': str(submission_comment.submission),
-            'subreddit': str(submission_comment.subreddit),
-            'subreddit_id': str(submission_comment.subreddit_id)
-        }
-        db_collection.insert_one(submission_comment_data)
-
-    db_collection.close()
+    # db_collection.close()
 
 
 def main():

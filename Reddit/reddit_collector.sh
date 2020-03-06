@@ -1,1 +1,1 @@
-python3 src/reddit_post_collector.py "@"
+python3 src/reddit_post_collector.py "$@"
