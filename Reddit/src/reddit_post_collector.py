@@ -8,8 +8,6 @@
 
 @package docstring
 """
-import argparse
-import bson.objectid.ObjectId
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
@@ -206,7 +204,9 @@ def add_collected_data_to_database(reddit_submission_comments,
         print(submission_comment.submission)
         print(submission_comment.subreddit)
         print(submission_comment.subreddit_id)
-        
+
+        exit()
+
         submission_comment_data = {
             'author': submission_comment.author,
             'body': submission_comment.body,
