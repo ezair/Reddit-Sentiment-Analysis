@@ -9,6 +9,7 @@
 @package docstring
 """
 import argparse
+from prawcore import NotFound
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
@@ -81,9 +82,12 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     """
 
     try:
+        # If creating this object fails, then we will know that the subreddit
+        # does not exist and we be moved into the except.
+        reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
+
         # We only want to add a subreddit to the list one time,
         # so we do not want to allow duplicates. It will ruin our data.
-        reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
         with open(path_to_sub_reddit_file, 'r') as reddit_file:
             for line in reddit_file:
                 if line.strip() == parsed_command_line_arguments.add:
@@ -92,8 +96,8 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
         with open(path_to_sub_reddit_file, 'a') as reddit_file:
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
 
-    # In the event that the subreddit does not exist, we land here.
-    except Exception:
+    # The given subreddit does not exist.
+    except NotFound:
         print('Unable to add sub_reddit: "{}", it does not exist.'
               .format(parsed_command_line_arguments.add))
 
