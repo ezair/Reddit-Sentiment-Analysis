@@ -13,6 +13,13 @@ from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
 
+"""
+Default location that program searches for our sub reddit list.
+Change this variable if you want run program on a different sub_reddit_list.
+"""
+SUB_REDDIT_LIST = "sub_reddit_list.sub"
+
+
 def get_argument_parser_containing_program_flag_information():
     """
     Returns Loads up an argument_parser object with the value that the
@@ -55,7 +62,7 @@ def get_argument_parser_containing_program_flag_information():
 
 
 def add_sub_reddit_to_db_file(parsed_command_line_arguments,
-                              path_to_sub_reddit_file='sub_reddits.txt',
+                              path_to_sub_reddit_file=SUB_REDDIT_LIST,
                               reddit=API_INSTANCE):
     """
     Appends a sub_reddit to the end of the file that is given by the user.
@@ -70,14 +77,20 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to add to.
-                                         (default: {'sub_reddits.txt'})
+                                         (default: {SUB_REDDIT_LIST})
     """
 
     try:
+        # We only want to add a subreddit to the list one time,
+        # so we do not want to allow duplicates. It will ruin our data.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
+        with open(path_to_sub_reddit_file, 'r') as reddit_file:
+            for line in reddit_file:
+                if line.strip() == parsed_command_line_arguments.add:
+                    return None
+
         with open(path_to_sub_reddit_file, 'a') as reddit_file:
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
-        print("i am here")
 
     # In the event that the subreddit does not exist, we land here.
     except Exception:
@@ -86,7 +99,7 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
 
 
 def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
-                                 path_to_sub_reddit_file='sub_reddits.txt'):
+                                 path_to_sub_reddit_file=SUB_REDDIT_LIST):
     """
     Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
@@ -101,11 +114,11 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of
                                          sub_reddits to remove from.
-                                         (default: {'sub_reddits.txt'})
+                                         (default: {SUB_REDDIT_LIST})
     """
 
     # We need to store the content of the file, so that we can write
-    # each line back into the it (except the one line we want to remove).
+    # each line back into it (except the one line we want to remove).
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
         lines_in_reddit_file = reddit_file.readlines()
 
@@ -117,7 +130,7 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
                 reddit_file.write(line)
 
 
-def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
+def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
     """
     Returns a list containing the sub_reddits that a user want to analyze
     data off of (given from the path_to_sub_reddit_file)
@@ -125,7 +138,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file='sub_reddits.txt'):
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to the file that contains
                                          the sub_reddits we want.
-                                         (default: {'sub_reddits.txt'})
+                                         (default: {SUB_REDDIT_LIST})
 
     Returns:
         {list(str)} -- list of sub_reddits that we want to analyze data on.
@@ -209,7 +222,6 @@ def add_collected_data_to_database(reddit_submission_comments,
         # print(submission_comment.subreddit_id)
         print("\n")
         # exit()
-
     #     submission_comment_data = {
     #         'author': submission_comment.author,
     #         'body': submission_comment.body,
@@ -233,26 +245,23 @@ def add_collected_data_to_database(reddit_submission_comments,
 
 
 def main():
-    # Contains the command line arguments that the user passed in.
-    # These arguments are stored as namespace objects.
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
-    # Collecting data.
     if command_line_argument_parser.collect:
         print("Collecting data...")
-        add_collected_data_to_database(
-            get_collected_data_from_sub_reddits(get_list_of_sub_reddits()))
+        collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
+                                                    get_list_of_sub_reddits())
+        add_collected_data_to_database(collected_data_from_sub_reddits)
 
-    # Adding a sub reddit.
     elif command_line_argument_parser.add:
+        print('"{}" has been added to list of sub_reddits'
+              .format(command_line_argument_parser.add))
         add_sub_reddit_to_db_file(command_line_argument_parser)
 
-    # Removing a subreddit.
     elif command_line_argument_parser.remove:
         remove_sub_reddit_in_db_file(command_line_argument_parser)
 
-    # When a user doesn't give us anything, we want to display help text.
     else:
         arg_parser.print_help()
 
