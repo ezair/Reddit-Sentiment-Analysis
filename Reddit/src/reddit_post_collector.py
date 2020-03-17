@@ -42,7 +42,7 @@ def get_argument_parser_containing_program_flag_information():
     argument_to_execute = parser.add_mutually_exclusive_group()
 
     argument_to_execute.add_argument('--collect', help='Prompt the user for '
-                                                       'a datarange and being '
+                                                       'a data range and being '
                                                        'collecting the data. '
                                                        'When we are done with '
                                                        'collecting, we add '
