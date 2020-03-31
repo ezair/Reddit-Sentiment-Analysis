@@ -160,7 +160,7 @@ from pymongo import MongoClient
 # our main program (reddit_post_collector) can handle it all the same.
 try:
     # My current auth token is python3.4 or higher.
-    mongo_auth_token = 'YOUR MONGO AUTH TOKEN GOES HERE!
+    mongo_auth_token = 'YOUR MONGO AUTH TOKEN GOES HERE!'
     client = MongoClient(mongo_auth_token)
     db = client.get_database('reddit')
 
