@@ -152,7 +152,9 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
 
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits,
-                                        reddit_api=API_INSTANCE):
+                                        reddit_api=API_INSTANCE,
+                                        number_of_posts=100,
+                                        sorted_by='top'):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -175,7 +177,12 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
     # wants to collect data from.
     sub_reddit_posts = []
     for sub_reddit in list_of_sub_reddits:
-        sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=5)
+        if sorted_by == 'hot':
+            sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
+        elif sorted_by == 'top':
+            sub_reddit_posts += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
+        elif sorted_by == "new":
+            sub_reddit_posts += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
 
     # Awesome, time to grab all of the comment objects, because we will later
     # want to add them into a mongo db_database.
@@ -254,6 +261,12 @@ def main():
 
     if command_line_argument_parser.collect:
         print("Collecting data...")
+        
+        # account for error handling for new, hot, top
+        
+        # account for minimum amount of posts to grab from sub-reddit.
+        
+        
         collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
                                                     get_list_of_sub_reddits())
         add_collected_data_to_database(collected_data_from_sub_reddits)
