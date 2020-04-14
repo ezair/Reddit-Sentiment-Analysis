@@ -272,10 +272,14 @@ def get_post_sorting_type_from_user():
     # get_collected_data_from_sub_reddits() method for the sorted_by parameter.
     post_sort_option = 0
     while post_sort_option < 1 or post_sort_option > 3:
-        post_sort_option = int(input("What type of posts would you like to grab?\n"
-                                        "(1) Hot posts\n"
-                                        "(2) New posts\n"
-                                        "(3) Top posts\n"))
+        try:
+            post_sort_option = int(input("What type of posts would you like to grab?\n"
+                                         "(1) Hot posts\n"
+                                         "(2) New posts\n"
+                                         "(3) Top posts\n"
+                                         "Enter: "))
+        except ValueError:
+            print("\nError, that is not an integer, please try again!\n")
 
     if post_sort_option == 1:
         return 'hot'
