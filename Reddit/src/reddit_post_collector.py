@@ -82,8 +82,10 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     """
 
     try:
-        # If creating this object fails, then we will know that the subreddit
-        # does not exist and we be moved into the except.
+        # This line is needed to so that we can see if there are any
+        # posts inside of the subreddit we are trying to collect from.
+        # If this line fails, we know it does not exist and are thrown
+        # into the except statement.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
 
         # We only want to add a subreddit to the list one time,
@@ -152,9 +154,9 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
 
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits,
+                                        sorted_by,
                                         reddit_api=API_INSTANCE,
-                                        number_of_posts=100,
-                                        sorted_by='top'):
+                                        number_of_posts=100):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -255,25 +257,52 @@ def add_collected_data_to_database(reddit_submission_comments,
     # db_collection.close()
 
 
+def get_post_sorting_type_from_user():
+    """
+    Prompt the user to decide the sorting method that they will want to use to collect posts
+    The options are Hot posts, New posts, and Top posts
+    
+    Returns:
+        str -- string containing either 'hot', 'new', or 'top'
+    """
+
+    # post_sort_option will contain an integer value that we will use to figure out
+    # how the user wants to sort their posts.
+    # Varying on this integer value, we will pass in a different string to the
+    # get_collected_data_from_sub_reddits() method for the sorted_by parameter.
+    post_sort_option = 0
+    while post_sort_option < 1 or post_sort_option > 3:
+        post_sort_option = int(input("What type of posts would you like to grab?\n"
+                                        "(1) Hot posts\n"
+                                        "(2) New posts\n"
+                                        "(3) Top posts\n"))
+
+    if post_sort_option == 1:
+        return 'hot'
+    elif post_sort_option == 2:
+        return 'new'
+    else:
+        return 'top'
+
+
 def main():
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
     if command_line_argument_parser.collect:
+        # This is either new, hot, or top.
+        post_sorting_type = get_post_sorting_type_from_user()
+
         print("Collecting data...")
-        
-        # account for error handling for new, hot, top
-        
-        # account for minimum amount of posts to grab from sub-reddit.
-        
-        
         collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
-                                                    get_list_of_sub_reddits())
+                                                     get_list_of_sub_reddits(),
+                                                     post_sorting_type)
         add_collected_data_to_database(collected_data_from_sub_reddits)
 
     elif command_line_argument_parser.add:
         print('"{}" has been added to list of sub_reddits'
               .format(command_line_argument_parser.add))
+
         add_sub_reddit_to_db_file(command_line_argument_parser)
 
     elif command_line_argument_parser.remove:
