@@ -2,7 +2,12 @@
 pylint
 pylint_runner
 
-## These are required for the project.
-pymongo
+# These are required for reddit use.
 praw
 graphviz
+
+# Required for database use.
+pymongo
+
+# Required for parsing the reddit website.
+beautifulsoup4

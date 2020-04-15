@@ -8,8 +8,16 @@
 
 @package docstring
 """
+# Do we wanna add, remove, or collect?
+# Also for displaying help text.
 import argparse
-import prawcore
+
+# These are needed for parsing to figure out if a sub_reddit exists.
+import re
+import requests
+from bs4 import BeautifulSoup
+
+# This is from our credentials lib (not an external lib).
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
@@ -62,7 +70,7 @@ def get_argument_parser_containing_program_flag_information():
     return parser
 
 
-def add_sub_reddit_to_db_file(parsed_command_line_arguments,
+def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
                               path_to_sub_reddit_file=SUB_REDDIT_LIST,
                               reddit=API_INSTANCE):
     """
@@ -82,10 +90,6 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
     """
 
     try:
-        # This line is needed to so that we can see if there are any
-        # posts inside of the subreddit we are trying to collect from.
-        # If this line fails, we know it does not exist and are thrown
-        # into the except statement.
         reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
 
         # We only want to add a subreddit to the list one time,
@@ -99,7 +103,7 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
 
     # The given subreddit does not exist.
-    except prawcore.NotFound as e:
+    except prawcore.NotFound:
         print('Unable to add sub_reddit: "{}", it does not exist.'
               .format(parsed_command_line_arguments.add))
 
@@ -153,10 +157,43 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
-def get_collected_data_from_sub_reddits(list_of_sub_reddits,
-                                        sorted_by,
-                                        reddit_api=API_INSTANCE,
-                                        number_of_posts=5):
+def sub_reddit_exists(sub_reddit_name):
+    """
+    Determines whether a given subreddit exists.
+    
+    Arguments:
+        sub_reddit_name {str} -- The subreddit that we wanna find out exists or not.
+    
+    Returns:
+        bool -- True if subreddit exists, False otherwise.
+    """
+    
+    # The praw API Has NO way way of knowing if a subreddit exists or not.
+    # I have tried insane amount of documentation on this.
+    # Long story short, I ended up deciding that parsing subreddit's webpage
+    # e.g. "reddit.com/r/<name_of_sub_reddit>/" and looking for the <h3> tag
+    # that shows up when no content exists on a reddit page, was the best way
+    # to determine that the subreddit does not exist.
+    sub_reddit_url = 'https://www.reddit.com/r/{}/'.format(sub_reddit_name)
+    sub_reddit_web_page = requests.get(url=sub_reddit_url)
+    header_tag_parser = BeautifulSoup(sub_reddit_web_page.text, features="html.parser")
+    list_of_h3_tags_in_sub_reddit_page = header_tag_parser.find_all(re.compile('^h[3]$'))
+
+    # This is the message that is displayed when no content is on a reddit page and the
+    # community does not exist.
+    # I will use this and compare it against each <h3> tag on the webpage that is pulled down.
+    # If it is found to be in the list, then we know that the subreddit does not exist.
+    string_indicating_sub_reddit_does_not_exist = '<h3 class="_2XKLlvmuqdor3RvVbYZfgz">'\
+                                                  'Sorry, there aren’t any communities on '\
+                                                  'Reddit with that name.</h3>'
+    for bs4_tag_object in list_of_h3_tags_in_sub_reddit_page:
+        if str(bs4_tag_object) == string_indicating_sub_reddit_does_not_exist:
+            return False
+    return True
+
+
+def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
+                                        reddit_api=API_INSTANCE, number_of_posts=5):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -185,15 +222,16 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
     # wants to collect data from.
     sub_reddit_submissions = []
     for sub_reddit in list_of_sub_reddits:
-        if sorted_by == 'hot':
-            # The issue is somewhere here.
-            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
-        elif sorted_by == 'top':
-            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
-        elif sorted_by == 'new':
-            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
+        if sub_reddit_exists(sub_reddit):
+            if sorted_by == 'hot': 
+                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
+            elif sorted_by == 'top':
+                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
+            elif sorted_by == 'new':
+                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
         else:
-            print("An unexpected error has occurred.")
+            print('Error: The subreddit "{}" does not exist. Skipping over it...\n'
+                  .format(sub_reddit))
 
     # Awesome, time to grab all of the comment objects, because we will later
     # want to add them into a mongo db_database.
@@ -263,7 +301,7 @@ def add_collected_data_to_database(reddit_submission_comments,
     #     }
     #     db_collection.insert_one(submission_comment_data)
 
-    # db_collection.close()
+    db_collection.close()
 
 
 def get_post_sorting_type_from_user():
@@ -299,25 +337,32 @@ def get_post_sorting_type_from_user():
 
 
 def main():
+    # Argparse is used to grab the command line arguments that the user passed in.
+    # Now that we have them, we can determine what they actually wanted to do
+    # and if something invalid is given, we can throw a help message for it :)
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
+    # Collect data.
     if command_line_argument_parser.collect:
         # This is either 'new', 'hot', or 'top'.
         post_sorting_type = get_post_sorting_type_from_user()
-
+        
         print("Collecting data...")
         collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
                                                      get_list_of_sub_reddits(),
                                                      post_sorting_type)
+        # And now it's in MongoDB :)
         add_collected_data_to_database(collected_data_from_sub_reddits)
 
+    # Add a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:
         print('"{}" has been added to list of sub_reddits'
               .format(command_line_argument_parser.add))
+        
+        add_sub_reddit_to_sub_file(command_line_argument_parser)
 
-        add_sub_reddit_to_db_file(command_line_argument_parser)
-
+    # Remove a subreddit from our subreddit (.sub) file.
     elif command_line_argument_parser.remove:
         remove_sub_reddit_in_db_file(command_line_argument_parser)
 
