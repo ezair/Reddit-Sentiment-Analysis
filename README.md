@@ -174,3 +174,31 @@ except Exception:
           '\t2. Has not properly been setup or\n'
           '\t3. The incorrect token has been given.')
 ```
+
+## Doxygen & Documentation
+
+Comments in this program are done in a format that supports using doxygen to generate .html documentation.
+
+### Generating Doxygen Documentation
+
+To Generate doxygen documentation make sure that doxygen is properly installed on your system.
+
+If it is not installed on your system and you are running linux, run the following command:
+
+`sudo apt-get install doxygen`
+
+This will install doxygen on your computer.
+
+### The generate_open_docs.py script
+
+To do a quickly generate and open documentation, simply run the command `./generate_open_docs.py` and the documentation will be built and then opened up in your web browser.
+
+NOTE: If you already have a web browser open, then the documentation will open in that window.
+
+Now that doxygen is installed on your computer, you can run the following command to generate the documentation:
+
+`cd doc; doxygen Doxyfile`
+
+Once executed, the documentation will be generated successfully.
+
+To Easily view it, inside of the `doc/` folder look for `html/index.html` and open it.
