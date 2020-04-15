@@ -89,23 +89,17 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
                                          (default: {SUB_REDDIT_LIST})
     """
 
-    try:
-        reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
+    reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
 
-        # We only want to add a subreddit to the list one time,
-        # so we do not want to allow duplicates. It will ruin our data.
-        with open(path_to_sub_reddit_file, 'r') as reddit_file:
-            for line in reddit_file:
-                if line.strip() == parsed_command_line_arguments.add:
-                    return None
+    # We only want to add a subreddit to the list one time,
+    # so we do not want to allow duplicates. It will ruin our data.
+    with open(path_to_sub_reddit_file, 'r') as reddit_file:
+        for line in reddit_file:
+            if line.strip() == parsed_command_line_arguments.add:
+                return None
 
-        with open(path_to_sub_reddit_file, 'a') as reddit_file:
-            reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
-
-    # The given subreddit does not exist.
-    except prawcore.NotFound:
-        print('Unable to add sub_reddit: "{}", it does not exist.'
-              .format(parsed_command_line_arguments.add))
+    with open(path_to_sub_reddit_file, 'a') as reddit_file:
+        reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
 
 
 def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
