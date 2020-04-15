@@ -9,7 +9,7 @@
 @package docstring
 """
 import argparse
-from prawcore import NotFound
+import prawcore
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
@@ -99,7 +99,7 @@ def add_sub_reddit_to_db_file(parsed_command_line_arguments,
             reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
 
     # The given subreddit does not exist.
-    except NotFound:
+    except prawcore.NotFound as e:
         print('Unable to add sub_reddit: "{}", it does not exist.'
               .format(parsed_command_line_arguments.add))
 
@@ -156,7 +156,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
 def get_collected_data_from_sub_reddits(list_of_sub_reddits,
                                         sorted_by,
                                         reddit_api=API_INSTANCE,
-                                        number_of_posts=100):
+                                        number_of_posts=5):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -165,6 +165,12 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
         list_of_sub_reddits {list(str)} -- Contains the names of all the
                                            sub-reddits that a user wants
                                            to parse comments from.
+
+        sorted_by {str} -- String that is either 'hot', 'new', or 'top'.
+                           Varying on which one is passed in, we will
+                           grab data from it's category.
+                           E.g. if the string is 'hot', then we will
+                           grab post data from the hot category.
 
     Keyword Arguments:
         reddit_api {Reddit} -- API_INSTANCE required to use the program
@@ -177,20 +183,23 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits,
 
     # Cool, we can now load up submissions from the sub-reddits that the
     # wants to collect data from.
-    sub_reddit_posts = []
+    sub_reddit_submissions = []
     for sub_reddit in list_of_sub_reddits:
         if sorted_by == 'hot':
-            sub_reddit_posts += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
+            # The issue is somewhere here.
+            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
         elif sorted_by == 'top':
-            sub_reddit_posts += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
-        elif sorted_by == "new":
-            sub_reddit_posts += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
+            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
+        elif sorted_by == 'new':
+            sub_reddit_submissions += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
+        else:
+            print("An unexpected error has occurred.")
 
     # Awesome, time to grab all of the comment objects, because we will later
     # want to add them into a mongo db_database.
     reddit_comments_from_given_sub_reddits = [
         comment
-        for reddit_submission in sub_reddit_posts
+        for reddit_submission in sub_reddit_submissions
         for comment in reddit_submission.comments
     ]
     return reddit_comments_from_given_sub_reddits
@@ -222,7 +231,7 @@ def add_collected_data_to_database(reddit_submission_comments,
         # print(submission_comment.distinguished)
         print("Edited:", submission_comment.edited)
         print("Comment id:", submission_comment.id)
-        # print(submission_comment.is_submitter)
+        print(submission_comment.is_submitter)
         print("Link ID:", submission_comment.link_id)
         print("Comments from previous submission:",
               submission_comment.parent_id)
@@ -232,9 +241,9 @@ def add_collected_data_to_database(reddit_submission_comments,
         print(submission_comment.stickied)
         print("submission:", submission_comment.submission)
         print("Subreddit:", submission_comment.subreddit)
-        # print(submission_comment.subreddit_id)
+        print(submission_comment.subreddit_id)
         print("\n")
-        # exit()
+        exit()
     #     submission_comment_data = {
     #         'author': submission_comment.author,
     #         'body': submission_comment.body,
@@ -294,7 +303,7 @@ def main():
     command_line_argument_parser = arg_parser.parse_args()
 
     if command_line_argument_parser.collect:
-        # This is either new, hot, or top.
+        # This is either 'new', 'hot', or 'top'.
         post_sorting_type = get_post_sorting_type_from_user()
 
         print("Collecting data...")
