@@ -48,21 +48,12 @@ def get_argument_parser_containing_program_flag_information():
     # rather than being able to call both add and remove for example.
     argument_to_execute = parser.add_mutually_exclusive_group()
 
-    argument_to_execute.add_argument('--collect', help='Prompt the user for '
-                                                       'a data range and being '
-                                                       'collecting the data. '
-                                                       'When we are done with '
-                                                       'collecting, we add '
-                                                       'the data to the '
-                                                       'database. ',
+    argument_to_execute.add_argument('--collect', help='Collect data from subreddit list.',
                                      action='store_true')
 
-    argument_to_execute.add_argument('--add', help='Add the sub-reddit passed '
-                                                   'in by the user '
-                                                   'to the list of '
-                                                   'sub-reddits '
-                                                   'that we will collect '
-                                                   'data from.')
+    argument_to_execute.add_argument('--add', help='Add the sub-reddit passed in by the user '
+                                                   'to the list of sub-reddits '
+                                                   'that we will collect data from.')
 
     argument_to_execute.add_argument('--remove', help='Remove the subreddit '
                                                       'passed in by the user.')
@@ -70,21 +61,18 @@ def get_argument_parser_containing_program_flag_information():
 
 
 def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
-                              path_to_sub_reddit_file=SUB_REDDIT_LIST,
-                              reddit=API_INSTANCE):
+                               path_to_sub_reddit_file=SUB_REDDIT_LIST, reddit=API_INSTANCE):
     """
     Appends a sub_reddit to the end of the file that is given by the user.
 
     Arguments:
-        parsed_command_line_arguments {namespace} -- Namespace object that
-                                                     contains the values of
-                                                     each given command line
-                                                     argument that is passed
-                                                     into the program.
+        parsed_command_line_arguments {namespace} -- Namespace object that contains the values of
+                                                     each given command line argument that is
+                                                     passed into the program.
 
     Keyword Arguments:
-        path_to_sub_reddit_file {str} -- Path to a file containing the list of
-                                         sub_reddits to add to.
+        path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits
+                                         that we will add to.
                                          (default: {SUB_REDDIT_LIST})
     """
 
@@ -108,15 +96,13 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     is given by the user.
 
     Arguments:
-        parsed_command_line_arguments {namespace} -- Namespace object that
-                                                     contains the values of
-                                                     each given command line
-                                                     argument that is passed
-                                                     into the program.
+        parsed_command_line_arguments {namespace} -- Namespace object that contains the values of
+                                                     each given command line argument that is
+                                                     passed into the program.
 
     Keyword Arguments:
-        path_to_sub_reddit_file {str} -- Path to a file containing the list of
-                                         sub_reddits to remove from.
+        path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits to
+                                         remove from.
                                          (default: {SUB_REDDIT_LIST})
     """
 
@@ -139,8 +125,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
     data off of (given from the path_to_sub_reddit_file)
 
     Keyword Arguments:
-        path_to_sub_reddit_file {str} -- Path to the file that contains
-                                         the sub_reddits we want.
+        path_to_sub_reddit_file {str} -- Path to the file that contains the sub_reddits.
                                          (default: {SUB_REDDIT_LIST})
 
     Returns:
@@ -153,14 +138,14 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
 def sub_reddit_exists(sub_reddit_name):
     """
     Determines whether a given subreddit exists.
-    
+
     Arguments:
         sub_reddit_name {str} -- The subreddit that we wanna find out exists or not.
-    
+
     Returns:
         bool -- True if subreddit exists, False otherwise.
     """
-    
+
     # The praw API Has NO way way of knowing if a subreddit exists or not.
     # I have tried insane amount of documentation on this.
     # Instead, we just get the status code of the website for the subreddit.
@@ -203,12 +188,15 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
     sub_reddit_submissions = []
     for sub_reddit in list_of_sub_reddits:
         if sub_reddit_exists(sub_reddit):
-            if sorted_by == 'hot': 
-                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
+            if sorted_by == 'hot':
+                sub_reddit_submissions += \
+                    reddit_api.subreddit(sub_reddit).hot(limit=number_of_posts)
             elif sorted_by == 'top':
-                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
+                sub_reddit_submissions += \
+                    reddit_api.subreddit(sub_reddit).top(limit=number_of_posts)
             elif sorted_by == 'new':
-                sub_reddit_submissions += reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
+                sub_reddit_submissions += \
+                    reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
         else:
             print('Error: The subreddit "{}" does not exist. Skipping over it...\n'
                   .format(sub_reddit))
@@ -232,7 +220,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
     Arguments:
         reddit_submission_comments {list} -- Contains reddit_comments for a
                                             particular post stored in strings.
-        
+
         sorting_type {str} -- This is either 'hot', 'new', or 'top'.
                               We will store this string in the database with each comment object,
                               so that we know which sorting_type it used and can later query by
@@ -251,9 +239,8 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
 
         # Some of these comments do not have an author assignment to them
         author_id = submission_comment.author.id \
-                    if hasattr(submission_comment.author, 'id') else ""
+            if hasattr(submission_comment.author, 'id') else ""
 
-        # database to have.
         submission_comment_record = {
             # Making this a string rather than an id just saves a lot of headaches.
             'author': author_id,
@@ -287,7 +274,7 @@ def get_post_sorting_type_from_user():
     """
     Prompt the user to decide the sorting method that they will want to use to collect posts
     The options are Hot posts, New posts, and Top posts
-    
+
     Returns:
         str -- string containing either 'hot', 'new', or 'top'
     """
@@ -326,12 +313,11 @@ def main():
     if command_line_argument_parser.collect:
         # This is either 'new', 'hot', or 'top'.
         post_sorting_type = get_post_sorting_type_from_user()
-        
+
         print("\nCollecting data...")
-        collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
-                                                     get_list_of_sub_reddits(),
-                                                     post_sorting_type)
-        
+        collected_data_from_sub_reddits = \
+            get_collected_data_from_sub_reddits(get_list_of_sub_reddits(), post_sorting_type)
+
         add_collected_data_to_database(collected_data_from_sub_reddits, post_sorting_type)
         print("Data collection completed successfully.")
 
@@ -339,7 +325,6 @@ def main():
     elif command_line_argument_parser.add:
         print('"{}" has been added to list of sub_reddits'
               .format(command_line_argument_parser.add))
-        
         add_sub_reddit_to_sub_file(command_line_argument_parser)
 
     # Remove a subreddit from our subreddit (.sub) file.
