@@ -20,7 +20,6 @@ import requests
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
-
 """
 Default location that program searches for our sub reddit list.
 Change this variable if you want run program on a different sub_reddit_list.

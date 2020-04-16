@@ -6,3 +6,8 @@ sudo apt-get install python3 python-dev python3-dev \
 
 # Install all required packages.
 pip install -r deps/requirements.txt
+
+# This is required, so that we avoid confliciton with bson and mongodb packages.
+sudo pip uninstall bson
+sudo pip uninstall pymongo
+sudo pip install pymongo
