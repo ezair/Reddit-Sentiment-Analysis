@@ -16,10 +16,6 @@ import argparse
 import requests
 
 # For serializing objects (from reddit) into MongoDB
-from bson.objectid import ObjectId
-import bson
-from bson.codec_options import CodecOptions
-
 # This is from our credentials lib (not an external lib).
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
@@ -224,7 +220,6 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
         reddit_submission.comments.replace_more(limit=0)
         for comment in reddit_submission.comments.list():
             reddit_comments_from_given_sub_reddits.append(comment)
-            print(comment.body)
     return reddit_comments_from_given_sub_reddits
 
 
@@ -237,6 +232,11 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
     Arguments:
         reddit_submission_comments {list} -- Contains reddit_comments for a
                                             particular post stored in strings.
+        
+        sorting_type {str} -- This is either 'hot', 'new', or 'top'.
+                              We will store this string in the database with each comment object,
+                              so that we know which sorting_type it used and can later query by
+                              sorting type if need be.
 
     Keyword Arguments:
         db_collection {mongoDB Database} -- The database that we are putting
@@ -248,11 +248,16 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
         # This is a easier form to deal with when storing a comment into the database.
         # Replies can later be looked up by their id, which is just so much easier.
         replies = [comment.id for comment in submission_comment.replies]
-        
-        # These are the fields that we want the reddit_comments in the
+
+        # Some of these comments do not have an author assignment to them
+        author_id = submission_comment.author.id \
+                    if hasattr(submission_comment.author, 'id') else ""
+
         # database to have.
-        submission_comment_data = {
-            'author': submission_comment.author.id,
+        submission_comment_record = {
+            # Making this a string rather than an id just saves a lot of headaches.
+            'author': author_id,
+
             'body': submission_comment.body,
             'created_at': submission_comment.created_utc,
             'distinguished': submission_comment.distinguished,
@@ -262,7 +267,6 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             'link_id': submission_comment.link_id,
             'parent_id': submission_comment.parent_id,
             'replies': replies,
-            
             'score': submission_comment.score,
             'stickied': submission_comment.stickied,
             'submission': submission_comment.submission.id,
@@ -272,10 +276,11 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             # a sub reddit has.
             'sorting_type': sorting_type
         }
-        # hope this works.
-        db_collection.insert_one(submission_comment_data, update=True)
-    print("\n\nIt worked!", end='\n\n')
-    # db_collection.close()
+
+        # Only add if it does not already exist.
+        if not db_collection.find_one(submission_comment_record):
+            db_collection.insert(submission_comment_record)
+            print("Added", str(submission_comment_record))
 
 
 def get_post_sorting_type_from_user():
@@ -297,7 +302,7 @@ def get_post_sorting_type_from_user():
             post_sort_option = int(input("What type of posts would you like to grab?\n"
                                          "(1) Hot posts\n"
                                          "(2) New posts\n"
-                                         "(3) Top posts\n"
+                                         "(3) Top posts\n\n"
                                          "Enter: "))
         except ValueError:
             print("\nError, that is not an integer, please try again!\n")
@@ -322,7 +327,7 @@ def main():
         # This is either 'new', 'hot', or 'top'.
         post_sorting_type = get_post_sorting_type_from_user()
         
-        print("Collecting data...")
+        print("\nCollecting data...")
         collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
                                                      get_list_of_sub_reddits(),
                                                      post_sorting_type)
