@@ -12,10 +12,13 @@
 # Also for displaying help text.
 import argparse
 
-# These are needed for parsing to figure out if a sub_reddit exists.
-import re
+# For getting the status code for a subreddit on reddit.com
 import requests
-from bs4 import BeautifulSoup
+
+# For serializing objects (from reddit) into MongoDB
+from bson.objectid import ObjectId
+import bson
+from bson.codec_options import CodecOptions
 
 # This is from our credentials lib (not an external lib).
 from credentials.reddit_credentials import API_INSTANCE
@@ -164,26 +167,12 @@ def sub_reddit_exists(sub_reddit_name):
     
     # The praw API Has NO way way of knowing if a subreddit exists or not.
     # I have tried insane amount of documentation on this.
-    # Long story short, I ended up deciding that parsing subreddit's webpage
-    # e.g. "reddit.com/r/<name_of_sub_reddit>/" and looking for the <h3> tag
-    # that shows up when no content exists on a reddit page, was the best way
-    # to determine that the subreddit does not exist.
+    # Instead, we just get the status code of the website for the subreddit.
+    # e.g. "reddit.com/r/<name_of_sub_reddit>/". If it is 404, then the subreddit
+    # does not exist.
     sub_reddit_url = 'https://www.reddit.com/r/{}/'.format(sub_reddit_name)
     sub_reddit_web_page = requests.get(url=sub_reddit_url)
-    header_tag_parser = BeautifulSoup(sub_reddit_web_page.text, features="html.parser")
-    list_of_h3_tags_in_sub_reddit_page = header_tag_parser.find_all(re.compile('^h[3]$'))
-
-    # This is the message that is displayed when no content is on a reddit page and the
-    # community does not exist.
-    # I will use this and compare it against each <h3> tag on the webpage that is pulled down.
-    # If it is found to be in the list, then we know that the subreddit does not exist.
-    string_indicating_sub_reddit_does_not_exist = '<h3 class="_2XKLlvmuqdor3RvVbYZfgz">'\
-                                                  'Sorry, there aren’t any communities on '\
-                                                  'Reddit with that name.</h3>'
-    for bs4_tag_object in list_of_h3_tags_in_sub_reddit_page:
-        if str(bs4_tag_object) == string_indicating_sub_reddit_does_not_exist:
-            return False
-    return True
+    return sub_reddit_web_page.status_code != 404
 
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
@@ -212,8 +201,9 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
                        that the user has in their sub reddit file.
     """
 
-    # Cool, we can now load up submissions from the sub-reddits that the
-    # wants to collect data from.
+    # Cool, we can now load up a list of submissions from the subreddits that the
+    # wants to collect data from. We grab as many posts from each as the user requests.
+    # Hence the number_of_posts variable passed in.
     sub_reddit_submissions = []
     for sub_reddit in list_of_sub_reddits:
         if sub_reddit_exists(sub_reddit):
@@ -227,17 +217,18 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
             print('Error: The subreddit "{}" does not exist. Skipping over it...\n'
                   .format(sub_reddit))
 
-    # Awesome, time to grab all of the comment objects, because we will later
-    # want to add them into a mongo db_database.
-    reddit_comments_from_given_sub_reddits = [
-        comment
-        for reddit_submission in sub_reddit_submissions
-        for comment in reddit_submission.comments
-    ]
+    # Now we grab every single comment from every single post that we have grabbed.
+    # This includes all comments that were replies to other comments.
+    reddit_comments_from_given_sub_reddits = []
+    for reddit_submission in sub_reddit_submissions:
+        reddit_submission.comments.replace_more(limit=0)
+        for comment in reddit_submission.comments.list():
+            reddit_comments_from_given_sub_reddits.append(comment)
+            print(comment.body)
     return reddit_comments_from_given_sub_reddits
 
 
-def add_collected_data_to_database(reddit_submission_comments,
+def add_collected_data_to_database(reddit_submission_comments, sorting_type,
                                    db_collection=DB_COLLECTION):
     """
     Put every reddit comment contained in "reddit_submission_comments" into
@@ -254,48 +245,37 @@ def add_collected_data_to_database(reddit_submission_comments,
     """
 
     for submission_comment in reddit_submission_comments:
+        # This is a easier form to deal with when storing a comment into the database.
+        # Replies can later be looked up by their id, which is just so much easier.
+        replies = [comment.id for comment in submission_comment.replies]
+        
         # These are the fields that we want the reddit_comments in the
         # database to have.
-        print("POST__________________________________________________\n")
-        print("Author:", submission_comment.author)
-        print("Comment Body:", submission_comment.body)
-        print("Created at:", submission_comment.created_utc)
-        # print(submission_comment.distinguished)
-        print("Edited:", submission_comment.edited)
-        print("Comment id:", submission_comment.id)
-        print(submission_comment.is_submitter)
-        print("Link ID:", submission_comment.link_id)
-        print("Comments from previous submission:",
-              submission_comment.parent_id)
-        for x in submission_comment.replies:
-            print(x)
-        print("Rating:", submission_comment.score)
-        print(submission_comment.stickied)
-        print("submission:", submission_comment.submission)
-        print("Subreddit:", submission_comment.subreddit)
-        print(submission_comment.subreddit_id)
-        print("\n")
-        exit()
-    #     submission_comment_data = {
-    #         'author': submission_comment.author,
-    #         'body': submission_comment.body,
-    #         'created_at': submission_comment.created_utc,
-    #         'distinguished': submission_comment.distinguished,
-    #         'edited': str(submission_comment.edited),
-    #         '_id': str(submission_comment.id),
-    #         'is_submitter': submission_comment.is_submitter,
-    #         'link_id': str(submission_comment.link_id),
-    #         'parent_id': str(submission_comment.parent_id),
-    #         # 'replies': submission_comment.replies,
-    #         'score': submission_comment.score,
-    #         'stickied': submission_comment.stickied,
-    #         'submission': str(submission_comment.submission),
-    #         'subreddit': str(submission_comment.subreddit),
-    #         'subreddit_id': str(submission_comment.subreddit_id)
-    #     }
-    #     db_collection.insert_one(submission_comment_data)
-
-    db_collection.close()
+        submission_comment_data = {
+            'author': submission_comment.author.id,
+            'body': submission_comment.body,
+            'created_at': submission_comment.created_utc,
+            'distinguished': submission_comment.distinguished,
+            'edited': submission_comment.edited,
+            '_id': submission_comment.id,
+            'is_submitter': submission_comment.is_submitter,
+            'link_id': submission_comment.link_id,
+            'parent_id': submission_comment.parent_id,
+            'replies': replies,
+            
+            'score': submission_comment.score,
+            'stickied': submission_comment.stickied,
+            'submission': submission_comment.submission.id,
+            'subreddit': submission_comment.subreddit.id,
+            'subreddit_id': submission_comment.subreddit_id,
+            # This is the special custom field that I added for seeing what sorting type
+            # a sub reddit has.
+            'sorting_type': sorting_type
+        }
+        # hope this works.
+        db_collection.insert_one(submission_comment_data, update=True)
+    print("\n\nIt worked!", end='\n\n')
+    # db_collection.close()
 
 
 def get_post_sorting_type_from_user():
@@ -346,8 +326,9 @@ def main():
         collected_data_from_sub_reddits = get_collected_data_from_sub_reddits(
                                                      get_list_of_sub_reddits(),
                                                      post_sorting_type)
-        # And now it's in MongoDB :)
-        add_collected_data_to_database(collected_data_from_sub_reddits)
+        
+        add_collected_data_to_database(collected_data_from_sub_reddits, post_sorting_type)
+        print("Data collection completed successfully.")
 
     # Add a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:
