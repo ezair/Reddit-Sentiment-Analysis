@@ -14,7 +14,7 @@ def main():
     # print(y)
     # records print out as dicts it appears.
     x.analyze_submission('ca8q81')
-
+    
 
 if __name__ == '__main__':
     main()

@@ -4,7 +4,8 @@ LATER
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
-from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
+from nltk.stem import PorterStemmer
+from nltk.classify import NaiveBayesClassifier
 
 
 class SubRedditAnalyzer():
@@ -26,14 +27,30 @@ class SubRedditAnalyzer():
         """
         self.__stop_words = stopwords.words('english')
 
-    def __process_comment(self, list_of_comments):
-        useful_tokens = []
-        for comment in list_of_comments:
+    def __preprocess_comment_for_analysis(self, comment):
+        filtered_tokens_in_comment = []
+        for sentence in comment:
+            # We don't wanna have any punctuation in our comment.
             tokenizer = RegexpTokenizer(r'\w+')
-            toks = tokenizer.tokenize(comment)
-            toks = [token.lower() for token in toks if token.lower() not in self.__stop_words]
-            useful_tokens.extend(toks)
-        return useful_tokens
+            tokenized_sentence = tokenizer.tokenize(sentence)
+
+            # We do not care about words in our stop list, they just cause issues.
+
+            for token in tokenized_sentence:
+                if token.to_lower() not in self.__stop_words:
+                    filtered_tokens_in_comment.append(token)
+
+        # Now we stem each token in the commen that we have.
+        # E.g. Words like 'run' or 'running' just become their base form word 'run'
+        stemmer = PorterStemmer()
+        stemed_tokens = [stemmer.stem(token) for token in filtered_tokens_in_comment]
+
+        # Finally, we want to look at each token and get its tagging.
+        # E.g. is it a noun, a verb, what is it?
+        preprocessed_tokens = nltk.pos_tag(stemed_tokens)
+        print(preprocessed_tokens)
+        print(type(preprocessed_tokens))
+        return preprocessed_tokens
 
     def analyze_submission(self, submission_id_as_string, show_statistics=False,
                            show_most_frequent_words=False):
@@ -47,14 +64,16 @@ class SubRedditAnalyzer():
 
         # Okay, we have now cleaned up each individual comment in the given list,
         # so they are ready to be analysed.
-        all_processed_comments = self.__process_comment(all_comments_on_submission_as_strings)
-        for comment in all_processed_comments:
-            print(comment)
+        all_processed_comments = []
+
+        self. __preprocess_comment_for_analysis(all_comments_on_submission_as_strings)
 
         # Now, let's find out what is "positive" and what is "negative".
         # We can get an overall rating of "goodness" and "badness" based off of this.
+        pos_freq = nltk.FreqDist(all_processed_comments)
+        print(pos_freq.most_common(30))
 
-        if statistics:
+        if show_statistics:
             pass
 
     def analyze_whole_subreddit(self, subreddit_name):
