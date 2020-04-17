@@ -11,3 +11,6 @@ pip install -r deps/requirements.txt
 sudo pip uninstall bson
 sudo pip uninstall pymongo
 sudo pip install pymongo
+
+# python script that just downloads and installs the nltk library.
+./deps/nltk_downloader.py
