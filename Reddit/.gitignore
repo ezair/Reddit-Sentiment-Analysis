@@ -15,3 +15,6 @@ doc/latex/
 
 # No way that we want these getting out.
 credentials/*
+
+# I want this in my project, but do not want it uploaded (too many files).
+nltk_data
