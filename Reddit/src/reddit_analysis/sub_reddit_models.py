@@ -124,12 +124,14 @@ class SubRedditAnalyzer():
         
         print("\nResults of all comments:")
         print("Average positivity: {}"
-              .format(sum([comment_results['pos'] for comment_results in analysis_comment_results_of_all_comments]) / len(analysis_comment_results_of_all_comments)))
+              .format(sum([comment_results['pos'] for comment_results in analysis_comment_results_of_all_comments])
+                      / len(analysis_comment_results_of_all_comments)))
         print("Average negativity: {}"
-              .format(sum([comment_results['neg'] for comment_results in analysis_comment_results_of_all_comments]) / len(analysis_comment_results_of_all_comments)))
+              .format(sum([comment_results['neg'] for comment_results in analysis_comment_results_of_all_comments])
+                      / len(analysis_comment_results_of_all_comments)))
         print("Average neutrality: {}"
-              .format(sum([comment_results['neu'] for comment_results in analysis_comment_results_of_all_comments]) / len(analysis_comment_results_of_all_comments)))
-        exit()
+              .format(sum([comment_results['neu'] for comment_results in analysis_comment_results_of_all_comments])
+                      / len(analysis_comment_results_of_all_comments)))
 
     def analyze_whole_subreddit(self, subreddit_id):
         pass
