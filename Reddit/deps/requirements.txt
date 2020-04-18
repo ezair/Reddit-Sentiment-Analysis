@@ -8,3 +8,7 @@ graphviz
 
 # Required for database use.
 pymongo
+
+# For sentiment analysis (after we have installed nltk which
+#                         is used for preoriocessing data)
+vaderSentiment

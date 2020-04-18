@@ -256,7 +256,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             'score': submission_comment.score,
             'stickied': submission_comment.stickied,
             'submission': submission_comment.submission.id,
-            'subreddit': submission_comment.subreddit.id,
+            'subreddit_name': submission_comment.subreddit.display_name,
             'subreddit_id': submission_comment.subreddit_id,
             # This is the special custom field that I added for seeing what sorting type
             # a sub reddit has.
@@ -266,7 +266,10 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
         # Only add if it does not already exist.
         if not db_collection.find_one(submission_comment_record):
             db_collection.insert(submission_comment_record)
-            print("Added", str(submission_comment_record))
+            print("Added Record:")
+            print("__________________________________________________________")
+            print(str(submission_comment_record))
+            print("__________________________________________________________\n")
 
 
 def get_post_sorting_type_from_user():
@@ -318,7 +321,7 @@ def main():
             get_collected_data_from_sub_reddits(get_list_of_sub_reddits(), post_sorting_type)
 
         add_collected_data_to_database(collected_data_from_sub_reddits, post_sorting_type)
-        print("Data collection completed successfully.")
+        print("\nData collection completed successfully.")
 
     # Add a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:

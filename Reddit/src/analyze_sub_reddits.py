@@ -13,8 +13,9 @@ def main():
     y = db.find_one({'submission': 'ca8q81'})
     # print(y)
     # records print out as dicts it appears.
-    x.analyze_submission('ca8q81')
-    
+    x.analyze_submission('g3afb8', sorting_type="hot")
+    # x.analyze_submission('g3afb8', sorting_type="new")
+    # x.analyze_submission('g3afb8', sorting_type="top")
 
 if __name__ == '__main__':
     main()
