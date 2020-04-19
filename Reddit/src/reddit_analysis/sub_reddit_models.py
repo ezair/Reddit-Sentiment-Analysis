@@ -12,6 +12,8 @@ from nltk.stem import PorterStemmer
 from pymongo.errors import CursorNotFound
 
 # For analysis/gathering sentiment analysis results.
+# Documentation of this analyzer:
+# https://www.kaggle.com/kamote/exploring-toxic-comments-by-sentiment-analysis
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer 
 
 
@@ -117,7 +119,6 @@ class SubRedditAnalyzer():
             if display_all_comment_results:
                 sub_reddit_name = self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
                 print("\nSubreddit Name:", sub_reddit_name)
-                print("Comment_id:", )
                 print("Comment:", comment)
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
