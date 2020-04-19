@@ -41,26 +41,22 @@ class SubRedditAnalyzer():
         These are the kind of words that can make or break your analysis results.
         """
         self.__stop_words = stopwords.words('english')
-        
-        
+
         """
         This is an out of the box Sentiment Analyzer model that is exceptionally good
         at analyzing social media data. We will feed individual comments to it and it will
         give us a score of polarity (positivity, negativity, neutral, and Compound). 
         """
         self.__comment_sentiment_analyzer = SentimentIntensityAnalyzer()
-        
-        
+
         # Make sure that the passed in database has all of the following fields.
         # It NEEDS to fit the form of our comment model, or we cannot analyze it.
         # TODO
-
 
     def __preprocess_comment(self, comment):
         filtered_tokens_in_comment = []
         # We don't wanna have any punctuation in our comment.
         tokenizer = RegexpTokenizer(r'\w+')
-        print(comment)
         tokenized_comment = tokenizer.tokenize(comment)
 
         # We do not care about words in our stop list, they just cause issues.
@@ -75,9 +71,7 @@ class SubRedditAnalyzer():
 
         # Now, we wanna put these tokens back into string form, so that we can easily
         # feed them into our sentiment analyzer later on.\
-        print("as list", stemed_tokens)
         stemed_tokens_to_string_form = ' '.join(stemed_tokens)
-        print("Stemed tokens", stemed_tokens_to_string_form)
         return stemed_tokens_to_string_form
 
 
@@ -91,12 +85,15 @@ class SubRedditAnalyzer():
             else:
                 return self.__reddit_collection.find({'submission': submission_id,
                                                       'sorting_type': sorting_type})
-        
+
         # No sorting type given, so we can just query.
         return self.__reddit_collection.find({'submission': submission_id})
 
     def analyze_submission(self, submission_id, sorting_type=None,
-                           show_statistics=False, show_most_frequent_words=False):
+                           display_all_comment_results=False):
+        
+        # Varying on the sorting type that is passed in, we will query on it.
+        # if no sorting type is given, then we just grab all posts for the submission.
         all_submission_comment_objects = \
             self.__get_all_comment_objects_for_submission_and_sorting_type(submission_id,
                                                                            sorting_type)
@@ -114,30 +111,51 @@ class SubRedditAnalyzer():
         analysis_comment_results_of_all_comments = []
         for comment in list_of_preprocessed_comments_for_submission:
             analysis_results_of_comment = self.__comment_sentiment_analyzer.polarity_scores(comment)
-            sub_reddit_name = self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
-            print("\nSubreddit Name:", sub_reddit_name)
-            print("Comment:", comment)
-            print("Positivity Rating:", analysis_results_of_comment['pos'])
-            print("Negativity Results:", analysis_results_of_comment['neg'])
-            print("Neutral results:", analysis_results_of_comment['neu'])
             analysis_comment_results_of_all_comments.append(analysis_results_of_comment)
-        
-        print("\nResults of all comments:")
-        print("Average positivity: {}"
-              .format(sum([comment_results['pos'] for comment_results in analysis_comment_results_of_all_comments])
-                      / len(analysis_comment_results_of_all_comments)))
-        print("Average negativity: {}"
-              .format(sum([comment_results['neg'] for comment_results in analysis_comment_results_of_all_comments])
-                      / len(analysis_comment_results_of_all_comments)))
-        print("Average neutrality: {}"
-              .format(sum([comment_results['neu'] for comment_results in analysis_comment_results_of_all_comments])
-                      / len(analysis_comment_results_of_all_comments)))
 
-    def analyze_whole_subreddit(self, subreddit_id):
+            # The user wants us to show the scoring for all comments that we are analyzing.
+            if display_all_comment_results:
+                sub_reddit_name = self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
+                print("\nSubreddit Name:", sub_reddit_name)
+                print("Comment_id:", )
+                print("Comment:", comment)
+                print("Positivity Rating:", analysis_results_of_comment['pos'])
+                print("Negativity Results:", analysis_results_of_comment['neg'])
+                print("Neutral results:", analysis_results_of_comment['neu'])
+                    
+        average_positivity = (sum([comment_results['pos']
+                                   for comment_results in analysis_comment_results_of_all_comments])
+                              / len(analysis_comment_results_of_all_comments))
+
+        average_negativity = (sum([comment_results['neg']
+                                   for comment_results in analysis_comment_results_of_all_comments])
+                              / len(analysis_comment_results_of_all_comments))
+
+        average_neutrality = (sum([comment_results['neu']
+                                   for comment_results in analysis_comment_results_of_all_comments])
+                              / len(analysis_comment_results_of_all_comments))
+        
+        # They also wanna see the final results of scoring (even tho they are returned).
+        if display_all_comment_results:
+            print('\nResults of all comments for submission: "{}"'.format(submission_id))
+            print("Average positivity: {}".format(average_positivity))
+            print("Average negativity: {}".format(average_negativity))
+            print("Average neutrality: {}".format(average_neutrality))
+            
+        return {
+            'positive': average_positivity,
+            'negative': average_negativity,
+            'neutral':  average_neutrality
+        }
+
+    def analyze_whole_subreddit(self, subreddit_id, sorting_type=None,
+                                display_all_comment_results=False):
         pass
 
+    # Later, once I implement word bubble and freq analysis.
     def show_hotest_submission_topics(self, submission_id):
         pass
 
+    # Later, once I implement word bubble and freq analysis.
     def show_hotest_sub_reddit_topics(self, subreddit_id):
         pass

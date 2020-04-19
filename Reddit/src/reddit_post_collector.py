@@ -74,9 +74,6 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
                                          that we will add to.
                                          (default: {SUB_REDDIT_LIST})
     """
-
-    reddit.subreddit(parsed_command_line_arguments.add).hot(limit=1)
-
     # We only want to add a subreddit to the list one time,
     # so we do not want to allow duplicates. It will ruin our data.
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
@@ -241,9 +238,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             if hasattr(submission_comment.author, 'id') else ""
 
         submission_comment_record = {
-            # Making this a string rather than an id just saves a lot of headaches.
             'author': author_id,
-
             'body': submission_comment.body,
             'created_at': submission_comment.created_utc,
             'distinguished': submission_comment.distinguished,
@@ -311,7 +306,7 @@ def main():
     arg_parser = get_argument_parser_containing_program_flag_information()
     command_line_argument_parser = arg_parser.parse_args()
 
-    # Collect data.
+    # COLLECT DATA.
     if command_line_argument_parser.collect:
         # This is either 'new', 'hot', or 'top'.
         post_sorting_type = get_post_sorting_type_from_user()
@@ -323,16 +318,21 @@ def main():
         add_collected_data_to_database(collected_data_from_sub_reddits, post_sorting_type)
         print("\nData collection completed successfully.")
 
-    # Add a subreddit to our subreddit (.sub) file.
+    # ADD a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:
-        print('"{}" has been added to list of sub_reddits'
-              .format(command_line_argument_parser.add))
-        add_sub_reddit_to_sub_file(command_line_argument_parser)
+        if sub_reddit_exists(command_line_argument_parser.add):
+            add_sub_reddit_to_sub_file(command_line_argument_parser)
+            print('"{}" has been added to list of subreddits'
+                  .format(command_line_argument_parser.add))
+        else:
+            print('Cannot add "{}" to list of subreddits, it does not exist.'
+                  .format(command_line_argument_parser.add))
 
-    # Remove a subreddit from our subreddit (.sub) file.
+    # REMOVE a subreddit from our subreddit (.sub) file.
     elif command_line_argument_parser.remove:
         remove_sub_reddit_in_db_file(command_line_argument_parser)
 
+    # clearly the user entered something that was not valid or did not add a flag.
     else:
         arg_parser.print_help()
 
