@@ -99,7 +99,6 @@ class SubRedditAnalyzer():
         all_submission_comment_objects = \
             self.__get_all_comment_objects_for_submission_and_sorting_type(submission_id,
                                                                            sorting_type)
-
         # We need to get the actual text from our comment object's body,
         # since that is what is going to be analyzed.
         all_comments_on_submission_as_strings = \
@@ -107,7 +106,8 @@ class SubRedditAnalyzer():
 
         # We have now cleaned up each individual comment in the given list, ready to analyze them.
         list_of_preprocessed_comments_for_submission = \
-            [self.__preprocess_comment(comment) for comment in all_comments_on_submission_as_strings]
+            [self.__preprocess_comment(comment)
+             for comment in all_comments_on_submission_as_strings]
 
         analysis_comment_results_of_all_comments = []
         for comment in list_of_preprocessed_comments_for_submission:
@@ -116,24 +116,29 @@ class SubRedditAnalyzer():
 
             # The user wants us to show the scoring for all comments that we are analyzing.
             if display_all_comment_results:
-                sub_reddit_name = self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
+                sub_reddit_name = \
+                    self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
                 print("\nSubreddit Name:", sub_reddit_name)
                 print("Comment:", comment)
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
                 print("Neutral results:", analysis_results_of_comment['neu'])
 
-        average_positivity = (sum([comment_results['pos']
-                                   for comment_results in analysis_comment_results_of_all_comments])
-                              / len(analysis_comment_results_of_all_comments))
+        try:
+            average_positivity = (sum([comment_results['pos']
+                                    for comment_results in analysis_comment_results_of_all_comments])
+                                / len(analysis_comment_results_of_all_comments))
 
-        average_negativity = (sum([comment_results['neg']
-                                   for comment_results in analysis_comment_results_of_all_comments])
-                              / len(analysis_comment_results_of_all_comments))
+            average_negativity = (sum([comment_results['neg']
+                                    for comment_results in analysis_comment_results_of_all_comments])
+                                / len(analysis_comment_results_of_all_comments))
 
-        average_neutrality = (sum([comment_results['neu']
-                                   for comment_results in analysis_comment_results_of_all_comments])
-                              / len(analysis_comment_results_of_all_comments))
+            average_neutrality = (sum([comment_results['neu']
+                                    for comment_results in analysis_comment_results_of_all_comments])
+                                / len(analysis_comment_results_of_all_comments))
+        except ZeroDivisionError:
+            # No comments exist for this, so we return default value.
+            return {'positive': 0, 'negative': 0, 'neutral': 0}
 
         # They also wanna see the final results of scoring (even tho they are returned).
         if display_all_comment_results:
@@ -141,43 +146,68 @@ class SubRedditAnalyzer():
             print("Average positivity: {}".format(average_positivity))
             print("Average negativity: {}".format(average_negativity))
             print("Average neutrality: {}".format(average_neutrality))
- 
+
+        test2 = self.__reddit_collection.find({'submission': 'g3afb8'}).retrieved
+        print(test2)
+
         return {
             'positive': average_positivity,
             'negative': average_negativity,
             'neutral':  average_neutrality
-        }    
+        }
 
     def analyze_subreddit(self, subreddit_name, sorting_type=None,
-                          display_all_comment_results=False):
-        submission_results = {
+                          display_all_comment_results=False,
+                          display_all_submission_results=False):
+        average_results_for_sub_reddit = {
             'positive': 0,
             'negative': 0,
             'neutral': 0
         }
 
-        # Every single subreddit submission record.
-        sub_reddit_submissions = self.__reddit_collection.find({'subreddit_name': subreddit_name})
-        for submission in sub_reddit_submissions:
+        # Every single subreddit submission record (with given sorting type).
+        all_sub_reddit_submissions = \
+            self.__reddit_collection.find({'subreddit_name': subreddit_name})
+        print(all_sub_reddit_submissions)
+        for submission in all_sub_reddit_submissions:
+            
             # Dict with all averages of a submission in given subreddit.
             analysis_results_of_submission = \
-                self.analyze_submission(submission, sorting_type=sorting_type,
+                self.analyze_submission(submission['_id'], sorting_type=sorting_type,
                                         display_all_comment_results=display_all_comment_results)
+            
+            print(submission)
+            print(analysis_results_of_submission)
+            average_results_for_sub_reddit['positive'] += analysis_results_of_submission['positive']
+            average_results_for_sub_reddit['negative'] += analysis_results_of_submission['negative']
+            average_results_for_sub_reddit['neutral'] += analysis_results_of_submission['neutral']
 
-            # We wanna average together the averages of every single submission.
-            submission_results['positive'] += analysis_results_of_submission['positive']
-            submission_results['negative'] += analysis_results_of_submission['negative']
-            submission_results['neutral'] += analysis_results_of_submission['neutral']
+            # print("submission results", str(average_results_for_sub_reddit))
+
+            # They want to see the rating for each submission post.
+            if display_all_submission_results:
+                print("{}: ".format(subreddit_name))
+                print('Positivity Rating: {}'.format(average_results_for_sub_reddit['positive']))
+                print('Negativity Rating: {}'.format(average_results_for_sub_reddit['negative']))
+                print('Neutrality Rating: {}'.format(average_results_for_sub_reddit['neutral']))
 
         # There might be zero submissions; avoid dividing by zero :)
-        if sub_reddit_submissions.count() > 0:
-            submission_results['positive'] /= sub_reddit_submissions.count()
-            submission_results['negative'] /= sub_reddit_submissions.count()
-            submission_results['neutral'] /= sub_reddit_submissions.count()
-        else:
-            print("Here")
+        try:
+            average_results_for_sub_reddit['positive'] /= all_sub_reddit_submissions.retrieved
+            average_results_for_sub_reddit['negative'] /= all_sub_reddit_submissions.retrieved
+            average_results_for_sub_reddit['neutral'] /= all_sub_reddit_submissions.retrieved
+        except ZeroDivisionError:
+            # Nothing was retrieved, so we return default.
+            return {'positive': 0, 'negative': 0, 'neutral': 0}
 
-        return submission_results
+        # The wanna show the averages in the method.
+        if display_all_submission_results:
+            print('\nResults of all comments for submission: "{}"'.format(subreddit_name))
+            print("Average positivity: {}".format(average_results_for_sub_reddit['positive']))
+            print("Average negativity: {}".format(average_results_for_sub_reddit['negative']))
+            print("Average neutrality: {}".format(average_results_for_sub_reddit['neutral']))
+
+        return average_results_for_sub_reddit
 
     # Later, once I implement word bubble and freq analysis.
     def show_hotest_submission_topics(self, submission_id):

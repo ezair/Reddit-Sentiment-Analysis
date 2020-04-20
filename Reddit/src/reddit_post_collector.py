@@ -259,8 +259,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
         }
 
         # Only add if it does not already exist.
-        if not db_collection.find_one(submission_comment_record):
-            db_collection.insert(submission_comment_record)
+        if not db_collection.find_one(submission_comment_record).retrieved:
             print("Added Record:")
             print("__________________________________________________________")
             print(str(submission_comment_record))
