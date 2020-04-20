@@ -85,10 +85,11 @@ class SubRedditAnalyzer():
                 raise ValueError('Error calling analyze_submission:, "{}" is not a valid option.'
                                  'Valid Options: "hot", "new, and "top"'.format(sorting_type))
             else:
+                print(submission_id)
                 return self.__reddit_collection.find({'submission': submission_id,
                                                       'sorting_type': sorting_type})
 
-        # No sorting type given, so we can just query.
+        # No sorting type given, so we can just get the query.
         return self.__reddit_collection.find({'submission': submission_id})
 
     def analyze_submission(self, submission_id, sorting_type=None,
@@ -96,9 +97,15 @@ class SubRedditAnalyzer():
 
         # Varying on the sorting type that is passed in, we will query on it.
         # if no sorting type is given, then we just grab all posts for the submission.
+        print("submission id", submission_id)
         all_submission_comment_objects = \
             self.__get_all_comment_objects_for_submission_and_sorting_type(submission_id,
                                                                            sorting_type)
+            
+        for x in all_submission_comment_objects:
+            print(x)
+            print("i am here.")
+
         # We need to get the actual text from our comment object's body,
         # since that is what is going to be analyzed.
         all_comments_on_submission_as_strings = \
@@ -146,9 +153,6 @@ class SubRedditAnalyzer():
             print("Average positivity: {}".format(average_positivity))
             print("Average negativity: {}".format(average_negativity))
             print("Average neutrality: {}".format(average_neutrality))
-
-        test2 = self.__reddit_collection.find({'submission': 'g3afb8'}).retrieved
-        print(test2)
 
         return {
             'positive': average_positivity,
