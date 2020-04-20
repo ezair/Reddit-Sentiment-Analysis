@@ -153,7 +153,7 @@ def sub_reddit_exists(sub_reddit_name):
 
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
-                                        reddit_api=API_INSTANCE, number_of_posts=5):
+                                        reddit_api=API_INSTANCE, number_of_posts=26):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -339,3 +339,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
