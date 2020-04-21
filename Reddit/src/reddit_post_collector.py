@@ -15,8 +15,9 @@ import argparse
 # For getting the status code for a subreddit on reddit.com
 import requests
 
-# Watch out for database repeats.
+# Potential exceptions to catch.
 from pymongo.errors import DuplicateKeyError
+from prawcore.exceptions import NotFound
 
 # For serializing objects (from reddit) into MongoDB
 # This is from our credentials lib (not an external lib).
@@ -237,9 +238,14 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
         # Replies can later be looked up by their id, which is just so much easier.
         replies = [comment.id for comment in submission_comment.replies]
 
-        # Some of these comments do not have an author assignment to them
-        author_id = submission_comment.author.id \
-            if hasattr(submission_comment.author, 'id') else ""
+        try:
+            # Some of these comments do not have an author assignment to them
+            author_id = submission_comment.author.id \
+                if hasattr(submission_comment.author, 'id') else ""
+        except NotFound:
+            # The reddit fields can be really...really...really weird some times.
+            # This is a little safety net.
+            author_id = ""
 
         submission_comment_record = {
             'author': author_id,

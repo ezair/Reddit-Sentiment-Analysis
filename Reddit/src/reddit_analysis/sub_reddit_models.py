@@ -124,7 +124,6 @@ class SubRedditAnalyzer():
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
                 print("Neutral results:", analysis_results_of_comment['neu'])
-        x = self.__reddit_collection.find({"submission": "g3az05"})
         
         try:
             average_positivity = (sum([comment_results['pos']
@@ -205,8 +204,8 @@ class SubRedditAnalyzer():
             print("Average positivity: {}".format(average_results_for_sub_reddit['positive']))
             print("Average negativity: {}".format(average_results_for_sub_reddit['negative']))
             print("Average neutrality: {}".format(average_results_for_sub_reddit['neutral']))
+            print("Total time:", str(datetime.datetime.now() - start_time))
 
-        print(datetime.datetime.now() - start_time)
         return average_results_for_sub_reddit
 
     # Later, once I implement word bubble and freq analysis.
