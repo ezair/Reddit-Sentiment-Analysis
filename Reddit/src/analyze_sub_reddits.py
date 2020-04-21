@@ -18,13 +18,19 @@ def main():
     #     print("{}: %{}".format(key, round(y[key] * 100, 2)))
     
     # Testing for a whole subreddit.
-    z = analyzer.analyze_subreddit('dankmemes', sorting_type="hot",
+    # dankmemes_anylsis_results = analyzer.analyze_subreddit('dankmemes', sorting_type="hot",
+    #                                display_all_comment_results=False,
+    #                                display_all_submission_results=False)
+    # for key in dankmemes_anylsis_results:
+    #     print("\nCleaner print out for a whole subreddit: ")
+    #     print("{}: %{}".format(key, round(dankmemes[key] * 100, 2)))
+    
+    hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube', sorting_type="hot",
                                    display_all_comment_results=False,
                                    display_all_submission_results=False)
-    for key in z:
+    for key in hmft_anylsis_results:
         print("\nCleaner print out for a whole subreddit: ")
-        print("{}: %{}".format(key, round(z[key] * 100, 2)))
-    
+        print("{}: %{}".format(key, round(hmft_anylsis_results[key] * 100, 2)))
     
 
 if __name__ == '__main__':

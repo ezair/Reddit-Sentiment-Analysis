@@ -15,10 +15,14 @@ import argparse
 # For getting the status code for a subreddit on reddit.com
 import requests
 
+# Watch out for database repeats.
+from pymongo.errors import DuplicateKeyError
+
 # For serializing objects (from reddit) into MongoDB
 # This is from our credentials lib (not an external lib).
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
+
 
 """
 Default location that program searches for our sub reddit list.
@@ -258,13 +262,14 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             'sorting_type': sorting_type
         }
 
-        # Only add if it does not already exist.
-        if not db_collection.find_one(submission_comment_record).retrieved:
+        try:
+            db_collection.insert_one(submission_comment_record)
             print("Added Record:")
             print("__________________________________________________________")
             print(str(submission_comment_record))
             print("__________________________________________________________\n")
-
+        except DuplicateKeyError:
+            print("Duplicate record found, skipping over it...\n")
 
 def get_post_sorting_type_from_user():
     """

@@ -85,7 +85,6 @@ class SubRedditAnalyzer():
                 raise ValueError('Error calling analyze_submission:, "{}" is not a valid option.'
                                  'Valid Options: "hot", "new, and "top"'.format(sorting_type))
             else:
-                print(submission_id)
                 return self.__reddit_collection.find({'submission': submission_id,
                                                       'sorting_type': sorting_type})
 
@@ -97,14 +96,9 @@ class SubRedditAnalyzer():
 
         # Varying on the sorting type that is passed in, we will query on it.
         # if no sorting type is given, then we just grab all posts for the submission.
-        print("submission id", submission_id)
         all_submission_comment_objects = \
             self.__get_all_comment_objects_for_submission_and_sorting_type(submission_id,
                                                                            sorting_type)
-            
-        for x in all_submission_comment_objects:
-            print(x)
-            print("i am here.")
 
         # We need to get the actual text from our comment object's body,
         # since that is what is going to be analyzed.
@@ -130,7 +124,8 @@ class SubRedditAnalyzer():
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
                 print("Neutral results:", analysis_results_of_comment['neu'])
-
+        x = self.__reddit_collection.find({"submission": "g3az05"})
+        
         try:
             average_positivity = (sum([comment_results['pos']
                                     for comment_results in analysis_comment_results_of_all_comments])
@@ -163,25 +158,25 @@ class SubRedditAnalyzer():
     def analyze_subreddit(self, subreddit_name, sorting_type=None,
                           display_all_comment_results=False,
                           display_all_submission_results=False):
+        import datetime
+        start_time = datetime.datetime.now()
+        print()
+        # Every single subreddit submission record (with given sorting type).
+        all_sub_reddit_submissions = \
+            self.__reddit_collection.find({'subreddit_name': subreddit_name})
+
         average_results_for_sub_reddit = {
             'positive': 0,
             'negative': 0,
             'neutral': 0
         }
 
-        # Every single subreddit submission record (with given sorting type).
-        all_sub_reddit_submissions = \
-            self.__reddit_collection.find({'subreddit_name': subreddit_name})
-        print(all_sub_reddit_submissions)
         for submission in all_sub_reddit_submissions:
-            
             # Dict with all averages of a submission in given subreddit.
             analysis_results_of_submission = \
-                self.analyze_submission(submission['_id'], sorting_type=sorting_type,
+                self.analyze_submission(submission['submission'], sorting_type=sorting_type,
                                         display_all_comment_results=display_all_comment_results)
-            
-            print(submission)
-            print(analysis_results_of_submission)
+
             average_results_for_sub_reddit['positive'] += analysis_results_of_submission['positive']
             average_results_for_sub_reddit['negative'] += analysis_results_of_submission['negative']
             average_results_for_sub_reddit['neutral'] += analysis_results_of_submission['neutral']
@@ -193,7 +188,7 @@ class SubRedditAnalyzer():
                 print("{}: ".format(subreddit_name))
                 print('Positivity Rating: {}'.format(average_results_for_sub_reddit['positive']))
                 print('Negativity Rating: {}'.format(average_results_for_sub_reddit['negative']))
-                print('Neutrality Rating: {}'.format(average_results_for_sub_reddit['neutral']))
+                print('Neutrality Rating: {}\n'.format(average_results_for_sub_reddit['neutral']))
 
         # There might be zero submissions; avoid dividing by zero :)
         try:
@@ -211,6 +206,7 @@ class SubRedditAnalyzer():
             print("Average negativity: {}".format(average_results_for_sub_reddit['negative']))
             print("Average neutrality: {}".format(average_results_for_sub_reddit['neutral']))
 
+        print(datetime.datetime.now() - start_time)
         return average_results_for_sub_reddit
 
     # Later, once I implement word bubble and freq analysis.
