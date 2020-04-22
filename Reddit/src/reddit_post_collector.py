@@ -19,7 +19,6 @@ import requests
 from pymongo.errors import DuplicateKeyError
 from prawcore.exceptions import NotFound
 
-# For serializing objects (from reddit) into MongoDB
 # This is from our credentials lib (not an external lib).
 from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION

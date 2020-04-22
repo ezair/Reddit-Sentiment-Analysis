@@ -5,7 +5,7 @@ sudo apt-get install python3 python-dev python3-dev \
      python-pip -y
 
 # Install all required packages.
-pip install -r deps/requirements.txt
+sudo pip install -r deps/requirements.txt
 
 # This is required, so that we avoid confliciton with bson and mongodb packages.
 sudo pip uninstall bson
@@ -13,4 +13,4 @@ sudo pip uninstall pymongo
 sudo pip install pymongo
 
 # python script that just downloads and installs the nltk library.
-./deps/nltk_downloader.py
+python3 ./deps/nltk_downloader.py

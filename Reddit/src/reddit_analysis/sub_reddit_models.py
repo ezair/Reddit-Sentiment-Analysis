@@ -1,6 +1,7 @@
 """
 LATER
 """
+import datetime
 
 # For data preprocessing and frequency analysis.
 import nltk
@@ -12,9 +13,8 @@ from nltk.stem import PorterStemmer
 from pymongo.errors import CursorNotFound
 
 # For analysis/gathering sentiment analysis results.
-# Documentation of this analyzer:
 # https://www.kaggle.com/kamote/exploring-toxic-comments-by-sentiment-analysis
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer 
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 class SubRedditAnalyzer():
@@ -22,13 +22,10 @@ class SubRedditAnalyzer():
     More on this later.
     """
 
-
     def __init__(self, mongo_reddit_collection):
-        # This needs to be done, so that we can actually grab data from nltk.
-
-        """ 
+        """
         The MongDB collection that we will be pulling our reddit data Inside of.
-        
+
         The database must have the following fielding fields in it:
             body, created_at, distinguished, edited, id, is_submitter
             link_id, parent_id, replies, score, stickied, submission
@@ -76,7 +73,6 @@ class SubRedditAnalyzer():
         stemed_tokens_to_string_form = ' '.join(stemed_tokens)
         return stemed_tokens_to_string_form
 
-
     def __get_all_comment_objects_for_submission_and_sorting_type(self, submission_id,
                                                                   sorting_type):
         if sorting_type:
@@ -110,10 +106,18 @@ class SubRedditAnalyzer():
             [self.__preprocess_comment(comment)
              for comment in all_comments_on_submission_as_strings]
 
-        analysis_comment_results_of_all_comments = []
+        # Used to sum up and get averages.
+        positive_comment_results = []
+        negative_comment_results = []
+
         for comment in list_of_preprocessed_comments_for_submission:
             analysis_results_of_comment = self.__comment_sentiment_analyzer.polarity_scores(comment)
-            analysis_comment_results_of_all_comments.append(analysis_results_of_comment)
+
+            # Now we need to determine if a comment is strictly positive or strictly negative.
+            if analysis_results_of_comment['compound'] >= 0.05:
+                positive_comment_results.append(analysis_results_of_comment['compound'])
+            elif analysis_results_of_comment['compound'] <= -0.05:
+                negative_comment_results.append(analysis_results_of_comment['compound'])
 
             # The user wants us to show the scoring for all comments that we are analyzing.
             if display_all_comment_results:
@@ -124,50 +128,34 @@ class SubRedditAnalyzer():
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
                 print("Neutral results:", analysis_results_of_comment['neu'])
-        
-        try:
-            average_positivity = (sum([comment_results['pos']
-                                    for comment_results in analysis_comment_results_of_all_comments])
-                                / len(analysis_comment_results_of_all_comments))
 
-            average_negativity = (sum([comment_results['neg']
-                                    for comment_results in analysis_comment_results_of_all_comments])
-                                / len(analysis_comment_results_of_all_comments))
+        number_of_results = len(negative_comment_results) + len(positive_comment_results)
 
-            average_neutrality = (sum([comment_results['neu']
-                                    for comment_results in analysis_comment_results_of_all_comments])
-                                / len(analysis_comment_results_of_all_comments))
-        except ZeroDivisionError:
-            # No comments exist for this, so we return default value.
-            return {'positive': 0, 'negative': 0, 'neutral': 0}
+        if number_of_results == 0:
+            return {'positive': 0, 'negative': 0}
+
+        average_positivity = sum(positive_comment_results) / number_of_results
+        average_negativity = sum(negative_comment_results) / number_of_results
 
         # They also wanna see the final results of scoring (even tho they are returned).
         if display_all_comment_results:
             print('\nResults of all comments for submission: "{}"'.format(submission_id))
             print("Average positivity: {}".format(average_positivity))
-            print("Average negativity: {}".format(average_negativity))
-            print("Average neutrality: {}".format(average_neutrality))
+            print("Average negativity: {}\n".format(average_negativity))
 
-        return {
-            'positive': average_positivity,
-            'negative': average_negativity,
-            'neutral':  average_neutrality
-        }
+        return {'positive': average_positivity, 'negative': average_negativity}
 
     def analyze_subreddit(self, subreddit_name, sorting_type=None,
                           display_all_comment_results=False,
                           display_all_submission_results=False):
-        import datetime
         start_time = datetime.datetime.now()
-        print()
         # Every single subreddit submission record (with given sorting type).
         all_sub_reddit_submissions = \
             self.__reddit_collection.find({'subreddit_name': subreddit_name})
 
         average_results_for_sub_reddit = {
             'positive': 0,
-            'negative': 0,
-            'neutral': 0
+            'negative': 0
         }
 
         for submission in all_sub_reddit_submissions:
@@ -178,7 +166,6 @@ class SubRedditAnalyzer():
 
             average_results_for_sub_reddit['positive'] += analysis_results_of_submission['positive']
             average_results_for_sub_reddit['negative'] += analysis_results_of_submission['negative']
-            average_results_for_sub_reddit['neutral'] += analysis_results_of_submission['neutral']
 
             # print("submission results", str(average_results_for_sub_reddit))
 
@@ -187,23 +174,20 @@ class SubRedditAnalyzer():
                 print("{}: ".format(subreddit_name))
                 print('Positivity Rating: {}'.format(average_results_for_sub_reddit['positive']))
                 print('Negativity Rating: {}'.format(average_results_for_sub_reddit['negative']))
-                print('Neutrality Rating: {}\n'.format(average_results_for_sub_reddit['neutral']))
 
         # There might be zero submissions; avoid dividing by zero :)
         try:
             average_results_for_sub_reddit['positive'] /= all_sub_reddit_submissions.retrieved
             average_results_for_sub_reddit['negative'] /= all_sub_reddit_submissions.retrieved
-            average_results_for_sub_reddit['neutral'] /= all_sub_reddit_submissions.retrieved
         except ZeroDivisionError:
             # Nothing was retrieved, so we return default.
-            return {'positive': 0, 'negative': 0, 'neutral': 0}
+            return {'positive': 0, 'negative': 0}
 
         # The wanna show the averages in the method.
         if display_all_submission_results:
             print('\nResults of all comments for submission: "{}"'.format(subreddit_name))
             print("Average positivity: {}".format(average_results_for_sub_reddit['positive']))
             print("Average negativity: {}".format(average_results_for_sub_reddit['negative']))
-            print("Average neutrality: {}".format(average_results_for_sub_reddit['neutral']))
             print("Total time:", str(datetime.datetime.now() - start_time))
 
         return average_results_for_sub_reddit
