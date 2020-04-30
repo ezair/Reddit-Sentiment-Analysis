@@ -113,21 +113,38 @@ class SubRedditAnalyzer():
         for comment in list_of_preprocessed_comments_for_submission:
             analysis_results_of_comment = self.__comment_sentiment_analyzer.polarity_scores(comment)
 
-            # Now we need to determine if a comment is strictly positive or strictly negative.
-            if analysis_results_of_comment['compound'] >= 0.05:
+            # Comment might not be positive or negative, so by default it is ignored.
+            # It will be set later.
+            classification_to_print_out = "Ignored"
+
+            # Concluded comment is positive.
+            if(
+                analysis_results_of_comment['compound'] >= 0.05 or \
+                analysis_results_of_comment['neg'] == 0 and analysis_results_of_comment['pos'] > 0
+            ):
                 positive_comment_results.append(analysis_results_of_comment['compound'])
-            elif analysis_results_of_comment['compound'] <= -0.05:
+                classification_to_print_out = "Positive"
+
+            # Concluded comment is negative.
+            elif(
+                analysis_results_of_comment['compound'] <= -0.05 or \
+                analysis_results_of_comment['pos'] == 0 and analysis_results_of_comment['neg'] > 0
+            ):
+                # We have a negative comment.
                 negative_comment_results.append(analysis_results_of_comment['compound'])
+                classification_to_print_out = "Negative"
 
             # The user wants us to show the scoring for all comments that we are analyzing.
             if display_all_comment_results:
                 sub_reddit_name = \
                     self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
+
                 print("\nSubreddit Name:", sub_reddit_name)
                 print("Comment:", comment)
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
-                print("Neutral results:", analysis_results_of_comment['neu'])
+                print("Classification: {}".format(classification_to_print_out))
+                print("Neutral results: {}\n".format(analysis_results_of_comment['neu']))
 
         number_of_results = len(negative_comment_results) + len(positive_comment_results)
 
@@ -149,21 +166,24 @@ class SubRedditAnalyzer():
                           display_all_comment_results=False,
                           display_all_submission_results=False):
         start_time = datetime.datetime.now()
+
         # Every single subreddit submission record (with given sorting type).
         all_sub_reddit_submissions = \
             self.__reddit_collection.find({'subreddit_name': subreddit_name})
 
-        average_results_for_sub_reddit = {
-            'positive': 0,
-            'negative': 0
-        }
+        average_results_for_sub_reddit = {'positive': 0, 'negative': 0}
 
         for submission in all_sub_reddit_submissions:
             # Dict with all averages of a submission in given subreddit.
             analysis_results_of_submission = \
                 self.analyze_submission(submission['submission'], sorting_type=sorting_type,
                                         display_all_comment_results=display_all_comment_results)
-
+            
+            # TODO
+            # Do same thing that was done with submission analysis where we only except certain scores.
+            # Some submissions are not positive and sum are not negative.
+            # Make a private method that is general and takes 2 lists and appends to the one that
+            # fits.
             average_results_for_sub_reddit['positive'] += analysis_results_of_submission['positive']
             average_results_for_sub_reddit['negative'] += analysis_results_of_submission['negative']
 
@@ -173,7 +193,7 @@ class SubRedditAnalyzer():
             if display_all_submission_results:
                 print("{}: ".format(subreddit_name))
                 print('Positivity Rating: {}'.format(average_results_for_sub_reddit['positive']))
-                print('Negativity Rating: {}'.format(average_results_for_sub_reddit['negative']))
+                print('Negativity Rating: {}\n'.format(average_results_for_sub_reddit['negative']))
 
         # There might be zero submissions; avoid dividing by zero :)
         try:

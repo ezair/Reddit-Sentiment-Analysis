@@ -26,7 +26,8 @@ def main():
     #     print("{}: %{}".format(key, round(dankmemes[key] * 100, 2)))
     
     hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube', sorting_type="top",
-                                                      display_all_submission_results=True)
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=True)
     for key in hmft_anylsis_results:
         print("\nCleaner print out for a whole subreddit: ")
         print("{}: %{}".format(key, round(hmft_anylsis_results[key] * 100, 2)))
