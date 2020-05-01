@@ -73,45 +73,63 @@ class SubRedditAnalyzer():
         stemed_tokens_to_string_form = ' '.join(stemed_tokens)
         return stemed_tokens_to_string_form
 
-    def __get_all_comment_objects_for_submission_and_sorting_type(self, submission_id,
-                                                                  sorting_type):
+
+    def __get_comment_objects_for_submission(self, submission_id, sorting_type=None,
+                                             number_of_comments_to_get=0):
         if sorting_type:
             if sorting_type not in ['hot', 'new', 'top']:
-                # The user might not have passed in a valid sorting type, so we must account for that.
+                # The user might not have passed in a valid sorting type.
                 raise ValueError('Error calling analyze_submission:, "{}" is not a valid option.'
                                  'Valid Options: "hot", "new, and "top"'.format(sorting_type))
             else:
                 return self.__reddit_collection.find({'submission': submission_id,
-                                                      'sorting_type': sorting_type})
+                                                      'sorting_type': sorting_type},
+                                                     limit=number_of_comments_to_get)
 
         # No sorting type given, so we can just get the query.
         return self.__reddit_collection.find({'submission': submission_id})
 
-    def analyze_submission(self, submission_id, sorting_type=None,
-                           display_all_comment_results=False):
 
-        # Varying on the sorting type that is passed in, we will query on it.
+    def __get_preprocessed_comments_as_strings(self, submission_id, sorting_type=None,
+                                               max_number_of_comments_to_analyze=0):
+         # Varying on the sorting type that is passed in, we will query on it.
         # if no sorting type is given, then we just grab all posts for the submission.
-        all_submission_comment_objects = \
-            self.__get_all_comment_objects_for_submission_and_sorting_type(submission_id,
-                                                                           sorting_type)
+        submission_comment_objects =\
+            self.__get_comment_objects_for_submission(submission_id,
+                                                      sorting_type,
+                                                      max_number_of_comments_to_analyze)
 
-        # We need to get the actual text from our comment object's body,
-        # since that is what is going to be analyzed.
-        all_comments_on_submission_as_strings = \
-            [comment['body'] for comment in all_submission_comment_objects]
+        # We need the comments in the form of strings, otherwise we cannot preprocess them/
+        # prep them for analysis.
+        submission_comments_as_strings =\
+            [comment['body'] for comment in submission_comment_objects]
+
+        # We have now cleaned up each individual comment in the given list, now they are ready
+        # to be analyzed later.
+        preprocessed_comments_for_submission =\
+            [self.__preprocess_comment(comment) for comment in submission_comments_as_strings]
+
+        return preprocessed_comments_for_submission
+
+
+    def analyze_submission(self, submission_id, sorting_type=None,
+                           display_all_comment_results=False,
+                           max_number_of_comments_to_analyze=0):
 
         # We have now cleaned up each individual comment in the given list, ready to analyze them.
-        list_of_preprocessed_comments_for_submission = \
-            [self.__preprocess_comment(comment)
-             for comment in all_comments_on_submission_as_strings]
+        list_of_preprocessed_comments_for_submission =\
+            self.__get_preprocessed_comments_as_strings(submission_id,
+                                                        sorting_type=sorting_type,
+                                                        max_number_of_comments_to_analyze=\
+                                                            max_number_of_comments_to_analyze)
 
-        # Used to sum up and get averages.
+        # Used to sum up and get averages for positive and negative comments.
         positive_comment_results = []
         negative_comment_results = []
 
         for comment in list_of_preprocessed_comments_for_submission:
-            analysis_results_of_comment = self.__comment_sentiment_analyzer.polarity_scores(comment)
+            analysis_results_of_comment = \
+                self.__comment_sentiment_analyzer.polarity_scores(comment)
 
             # Comment might not be positive or negative, so by default it is ignored.
             # It will be set later.
@@ -131,20 +149,26 @@ class SubRedditAnalyzer():
                 analysis_results_of_comment['pos'] == 0 and analysis_results_of_comment['neg'] > 0
             ):
                 # We have a negative comment.
-                negative_comment_results.append(analysis_results_of_comment['compound'])
+                negative_comment_results.append(abs(analysis_results_of_comment['compound']))
                 classification_to_print_out = "Negative"
 
             # The user wants us to show the scoring for all comments that we are analyzing.
             if display_all_comment_results:
-                sub_reddit_name = \
-                    self.__reddit_collection.find_one({'submission': submission_id})['subreddit_name']
+                try:
+                    subreddit_name =\
+                        self.__reddit_collection.find_one(
+                            {'submission': submission_id})['subreddit_name']
+                except CursorNotFound:
+                    # Might not have a subreddit_name as a field for this one, so
+                    # we default it if not found.
+                    subreddit_name = "NONE"
 
-                print("\nSubreddit Name:", sub_reddit_name)
+                print("\nSubreddit Name:", subreddit_name)
                 print("Comment:", comment)
                 print("Positivity Rating:", analysis_results_of_comment['pos'])
                 print("Negativity Results:", analysis_results_of_comment['neg'])
-                print("Classification: {}".format(classification_to_print_out))
                 print("Neutral results: {}\n".format(analysis_results_of_comment['neu']))
+                print("Classification: {}".format(classification_to_print_out))
 
         number_of_results = len(negative_comment_results) + len(positive_comment_results)
 
@@ -162,17 +186,22 @@ class SubRedditAnalyzer():
 
         return {'positive': average_positivity, 'negative': average_negativity}
 
+
     def analyze_subreddit(self, subreddit_name, sorting_type=None,
                           display_all_comment_results=False,
-                          display_all_submission_results=False):
+                          display_all_submission_results=False,
+                          max_number_of_comments_to_analyze=None,
+                          max_number_of_submissions_to_analyze=0):
         start_time = datetime.datetime.now()
 
         # Every single subreddit submission record (with given sorting type).
-        all_sub_reddit_submissions = \
+        all_sub_reddit_submissions =\
             self.__reddit_collection.find({'subreddit_name': subreddit_name})
 
         average_results_for_sub_reddit = {'positive': 0, 'negative': 0}
 
+        # We need to keep track of this
+        number_of_submissions_in_sub_reddit = 0
         for submission in all_sub_reddit_submissions:
             # Dict with all averages of a submission in given subreddit.
             analysis_results_of_submission = \
@@ -180,14 +209,16 @@ class SubRedditAnalyzer():
                                         display_all_comment_results=display_all_comment_results)
             
             # TODO
-            # Do same thing that was done with submission analysis where we only except certain scores.
-            # Some submissions are not positive and sum are not negative.
+            # Do same thing that was done with submission analysis where we only
+            # except certain scores. Some submissions are not positive and sum are not negative.
             # Make a private method that is general and takes 2 lists and appends to the one that
             # fits.
-            average_results_for_sub_reddit['positive'] += analysis_results_of_submission['positive']
-            average_results_for_sub_reddit['negative'] += analysis_results_of_submission['negative']
+            average_results_for_sub_reddit['positive'] += \
+                analysis_results_of_submission['positive']
 
-            # print("submission results", str(average_results_for_sub_reddit))
+            # These values are negative, need to take abs.
+            average_results_for_sub_reddit['negative'] += \
+                analysis_results_of_submission['negative']
 
             # They want to see the rating for each submission post.
             if display_all_submission_results:
@@ -196,14 +227,11 @@ class SubRedditAnalyzer():
                 print('Negativity Rating: {}\n'.format(average_results_for_sub_reddit['negative']))
 
         # There might be zero submissions; avoid dividing by zero :)
-        try:
+        if all_sub_reddit_submissions.retrieved > 0:
             average_results_for_sub_reddit['positive'] /= all_sub_reddit_submissions.retrieved
             average_results_for_sub_reddit['negative'] /= all_sub_reddit_submissions.retrieved
-        except ZeroDivisionError:
-            # Nothing was retrieved, so we return default.
-            return {'positive': 0, 'negative': 0}
 
-        # The wanna show the averages in the method.
+        # They wanna show the averages in the method.
         if display_all_submission_results:
             print('\nResults of all comments for submission: "{}"'.format(subreddit_name))
             print("Average positivity: {}".format(average_results_for_sub_reddit['positive']))
@@ -212,9 +240,11 @@ class SubRedditAnalyzer():
 
         return average_results_for_sub_reddit
 
+
     # Later, once I implement word bubble and freq analysis.
     def show_hotest_submission_topics(self, submission_id):
         pass
+
 
     # Later, once I implement word bubble and freq analysis.
     def show_hotest_sub_reddit_topics(self, subreddit_id):
