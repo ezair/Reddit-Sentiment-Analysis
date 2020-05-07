@@ -104,7 +104,8 @@ class RedditPreprocessor():
 
         # It was a list of strings, we are all good.
         self.__stop_words += list_of_words_to_add
-    
+
+
     # TODO.
     def change_language_of_stop_word_list(language_as_a_string):
         pass

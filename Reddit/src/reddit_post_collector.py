@@ -82,11 +82,12 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
     # so we do not want to allow duplicates. It will ruin our data.
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
         for line in reddit_file:
-            if line.strip() == parsed_command_line_arguments.add:
+            line = line.lower().strip()
+            if line == parsed_command_line_arguments.add.lower():
                 return None
 
     with open(path_to_sub_reddit_file, 'a') as reddit_file:
-        reddit_file.write('{}\n'.format(parsed_command_line_arguments.add))
+        reddit_file.write(f'{parsed_command_line_arguments.add.lower()}\n')
 
 
 def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
@@ -115,7 +116,8 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     # remove.
     with open(path_to_sub_reddit_file, 'w') as reddit_file:
         for line in lines_in_reddit_file:
-            if line.strip("\n") != parsed_command_line_arguments.remove:
+            line = line.lower().strip('\n')
+            if line != parsed_command_line_arguments.remove.lower():
                 reddit_file.write(line)
 
 
@@ -151,13 +153,13 @@ def sub_reddit_exists(sub_reddit_name):
     # Instead, we just get the status code of the website for the subreddit.
     # e.g. "reddit.com/r/<name_of_sub_reddit>/". If it is 404, then the subreddit
     # does not exist.
-    sub_reddit_url = 'https://www.reddit.com/r/{}/'.format(sub_reddit_name)
+    sub_reddit_url = f'https://www.reddit.com/r/{sub_reddit_name}/'
     sub_reddit_web_page = requests.get(url=sub_reddit_url)
     return sub_reddit_web_page.status_code != 404
 
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
-                                        reddit_api=API_INSTANCE, number_of_posts=26):
+                                        reddit_api=API_INSTANCE, number_of_posts=200):
     """
     Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
@@ -198,8 +200,7 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
                 sub_reddit_submissions += \
                     reddit_api.subreddit(sub_reddit).new(limit=number_of_posts)
         else:
-            print('Error: The subreddit "{}" does not exist. Skipping over it...\n'
-                  .format(sub_reddit))
+            print(f'Error: The subreddit "{sub_reddit}" does not exist. Skipping over it...\n')
 
     # Now we grab every single comment from every single post that we have grabbed.
     # This includes all comments that were replies to other comments.
@@ -260,7 +261,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             'score': submission_comment.score,
             'stickied': submission_comment.stickied,
             'submission': submission_comment.submission.id,
-            'subreddit_name': submission_comment.subreddit.display_name,
+            'subreddit_name': submission_comment.subreddit.display_name.lower(),
             'subreddit_id': submission_comment.subreddit_id,
             # This is the special custom field that I added for seeing what sorting type
             # a sub reddit has.
@@ -331,11 +332,9 @@ def main():
     elif command_line_argument_parser.add:
         if sub_reddit_exists(command_line_argument_parser.add):
             add_sub_reddit_to_sub_file(command_line_argument_parser)
-            print('"{}" has been added to list of subreddits'
-                  .format(command_line_argument_parser.add))
+            print(f'"{command_line_argument_parser.add}" has been added to list of subreddits')
         else:
-            print('Cannot add "{}" to list of subreddits, it does not exist.'
-                  .format(command_line_argument_parser.add))
+            print(f'Cannot add "{command_line_argument_parser.add}" to list of subreddits, it does not exist.')
 
     # REMOVE a subreddit from our subreddit (.sub) file.
     elif command_line_argument_parser.remove:

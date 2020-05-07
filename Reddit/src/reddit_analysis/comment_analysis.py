@@ -131,11 +131,19 @@ class SubRedditAnalyzer():
                           max_number_of_comments_to_analyze=0,
                           max_number_of_submissions_to_analyze=0):
         start_time = datetime.datetime.now()
-
+        
         # This gives us a list of strings, with each str being a distinct subreddit_id.
         subreddit_submission_ids =\
             self.__reddit_collection.find(
                 {'subreddit_name': subreddit_name}).distinct('submission')
+            
+        # There are no posts from the subreddits.
+        if len(subreddit_submission_ids) == 0:
+           # We should let the user know.
+            if display_all_comment_results or display_all_submission_results:
+                print(f'No posts were found for the subreddit {subreddit_name}')
+            # Since there are no submissions our scores are both going to be zero.
+            return {'positive': 0, 'negative': 0}
         
         # We only want to grab the amount of submissions that the user wants us to.
         # We take the first n amount.
