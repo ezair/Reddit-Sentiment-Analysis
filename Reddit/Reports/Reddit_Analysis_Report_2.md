@@ -57,7 +57,7 @@ Analyzing on subsets of data does come with its weaknesses. The results we recei
 
 Let's take a look of an example of running our results on a subreddit called `battlestations`. This subreddit contains a lot of comments on really nice looking computer builds, so we are expecting our results to be more positive than negative.
 
-### Analyzing `battlestation` with 10 submissions to analyze
+### Analyzing `battlestations` with 10 submissions to analyze
 
 *The call made in our program*:
 
@@ -128,8 +128,6 @@ Average negativity: 10.115049%
 Total time: 0:00:02.122480
 ```
 
-So, the negativity listed is 89.884951% and the positivity is 10.115049% for 10 submissions.
-
 ### Analyzing `battlestations` with all 150 submissions in our database
 
 *The call made in our program*:
@@ -155,7 +153,7 @@ So, in this particular case we see that after analyzing on 150 posts, the result
 
 Now, if we are to analyze a more dark subreddit such as `holdmyfeedingtube` we will see that the results for this one will a bit different. Part of this has to do with some users posting bad toxic content and other users calling them out stating that the content is bad.
 
-### Analyzing `holdmyfeedingtube` with all 150 submissions in our database
+### Analyzing `holdmyfeedingtube` with 10 submissions in our database
 
 *The call made in our program*:
 
@@ -167,3 +165,188 @@ def test_subreddit_call(analyzer):
                                                       display_all_comment_results=False,
                                                       max_number_of_submissions_to_analyze=10)
 ```
+
+```txt
+Subreddit: holdmyfeedingtube:
+Submission_id: bbpozw:
+Positivity Rating: 0.19428229423332527
+Negativity Rating: 0.8057177057666747
+
+Subreddit: holdmyfeedingtube:
+Submission_id: bkx7tp:
+Positivity Rating: 0.7209346077070591
+Negativity Rating: 1.2790653922929411
+
+Subreddit: holdmyfeedingtube:
+Submission_id: c6jb15:
+Positivity Rating: 1.10393082640027
+Negativity Rating: 1.8960691735997286
+
+Subreddit: holdmyfeedingtube:
+Submission_id: ca8q81:
+Positivity Rating: 1.4531490665327262
+Negativity Rating: 2.546850933467273
+
+Subreddit: holdmyfeedingtube:
+Submission_id: cgm7wj:
+Positivity Rating: 2.0233354395757486
+Negativity Rating: 2.9766645604242505
+
+Subreddit: holdmyfeedingtube:
+Submission_id: cmmby0:
+Positivity Rating: 2.392031991629216
+Negativity Rating: 3.6079680083707837
+
+Subreddit: holdmyfeedingtube:
+Submission_id: cxqkhc:
+Positivity Rating: 2.822155341211233
+Negativity Rating: 4.177844658788767
+
+Subreddit: holdmyfeedingtube:
+Submission_id: d3596a:
+Positivity Rating: 3.2467348905132534
+Negativity Rating: 4.753265109486747
+
+Subreddit: holdmyfeedingtube:
+Submission_id: ddd58l:
+Positivity Rating: 3.7966311230928684
+Negativity Rating: 5.203368876907132
+
+Subreddit: holdmyfeedingtube:
+Submission_id: dh306y:
+Positivity Rating: 4.214073286417404
+Negativity Rating: 5.7859267135825965
+
+
+Results of all comments for : "holdmyfeedingtube"
+Average positivity: 42.140733%
+Average negativity: 57.859267%
+Total time: 0:00:03.655826
+```
+
+*The call made in our program*:
+
+```python
+def test_subreddit_call(analyzer):
+    hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube',
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=False)
+```
+
+### Analyzing `holdmyfeedingtube` with all 150 submissions in our database
+
+```txt
+Results of all comments for : "holdmyfeedingtube"
+Average positivity: 48.362596%
+Average negativity: 51.637404%
+Total time: 0:00:39.465240
+```
+
+The difference of negativity between the subset analyed and the entire data set is a solid 6.2%, which may no sound like a huge amount, but it does make a difference.
+
+## Analyzing a subset of comments
+
+We also have the ability to limit the amount of comments that is read from each individual post. This can largely change the results that we receive from the program's analysis as well.
+
+I will now show an example of running the program with analyzing 10 comments per each submission, v.s. analyzing every single comment in each submission, which is what we have been doing above.
+
+### Analyzing holdmyfeedingtube with 1 comment from each submission
+
+*The call made in our program*:
+
+```python
+def test_subreddit_call(analyzer):
+    hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube',
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=False,
+                                                      max_number_of_comments_to_analyze=1)
+```
+
+```txt
+Results of all comments for: "holdmyfeedingtube"
+Average positivity: 50.400000%
+Average negativity: 49.600000%
+Total time: 0:00:12.114495
+```
+
+### Analyzing holdmyfeedingtube with all comments from each submission
+
+*The call made in our program*:
+
+```python
+def test_subreddit_call(analyzer):
+    hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube',
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=False)
+```
+
+```txt
+Results of all comments for : "holdmyfeedingtube"
+Average positivity: 48.362596%
+Average negativity: 51.637404%
+Total time: 0:00:39.171607
+```
+
+As you can see, there is about a 2% difference between these results.
+
+### Analyzing holdmyfeedingtube wth 1 comment from 10 submissions
+
+Now if we were to subset the amount of submissions to lets say 10, and then limit the number of comments to each posts to 1, then the results would be a even more distinct and further apart.
+
+*The call made in our program*:
+
+```python
+def test_subreddit_call(analyzer):
+    hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube',
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=False,
+                                                      max_number_of_comments_to_analyze=1,
+                                                      max_number_of_submissions_to_analyze=10)
+```
+
+```txt
+Results of all comments for : "holdmyfeedingtube"
+Average positivity: 42.857143%
+Average negativity: 57.142857%
+Total time: 0:00:00.810183
+```
+
+The main thing to note here is that depending on what kind of data you want, you need to choose the proper range.
+
+If you want the absolute best results, then you want to ensure that you analyze all submissions and comments in the database.
+
+If you want to get a quicker results but still get semi-accurate results, it is best to analyze about 100 submissions with 100 comments each, ensuring you have a data set of 10,000 to analyze.
+
+## Analyzing Posts By Sorting Type
+
+You can also analyze posts by a given sorting type.
+
+In other words, if you want to find the hottest posts at the current moment (based off the data in your database), then you can do so.
+
+If you you want analyze only the newest posts (in your database), then you can do so.
+
+If you want to analyze the top or most liked posts (in your database) then you can do that as well.
+
+The flags are `new`, `top`, and `hot`. These can be given to the `analyze_subreddit()`.
+
+Let's take a look at a call analyzing posts from `battlestations` with the `hot` flag so that we can analyze our the subreddit based off of reviews of nice computer gaming setups.
+
+### Analyzing all  hot posts on battlestations
+
+*The call made in our program*:
+
+```python
+hmft_anylsis_results = analyzer.analyze_subreddit('holdmyfeedingtube',
+                                                      display_all_submission_results=True,
+                                                      display_all_comment_results=False,
+                                                      sorting_type='new')
+```
+
+```txt
+Results of all comments for : "battlestations"
+Average positivity: 88.890652%
+Average negativity: 11.109348%
+Total time: 0:00:26.404022
+```
+
+Hmm, seems like people really enjoyed some of these gaming setups!
