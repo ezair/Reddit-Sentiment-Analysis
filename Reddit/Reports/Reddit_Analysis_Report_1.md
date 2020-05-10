@@ -1,10 +1,7 @@
 # ID Block
 
 - @Author Eric Zair
-- @Course Machine Learning
-- @Instructor Dr. Gurajala
 - @Project Reddit Analysis
-- @Assignment Report 1
 
 ## MongoDB Records
 

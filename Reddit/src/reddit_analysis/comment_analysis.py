@@ -135,8 +135,9 @@ class SubRedditAnalyzer():
         # This gives us a list of strings, with each str being a distinct subreddit_id.
         subreddit_submission_ids =\
             self.__reddit_collection.find(
-                {'subreddit_name': subreddit_name}).distinct('submission')
-            
+                {'subreddit_name': subreddit_name}
+                ).distinct('submission')
+
         # There are no posts from the subreddits.
         if len(subreddit_submission_ids) == 0:
            # We should let the user know.
@@ -147,7 +148,11 @@ class SubRedditAnalyzer():
         
         # We only want to grab the amount of submissions that the user wants us to.
         # We take the first n amount.
-        if max_number_of_submissions_to_analyze > 0:
+        if len(subreddit_submission_ids) > max_number_of_submissions_to_analyze and \
+           max_number_of_submissions_to_analyze !=0:
+            # It is not zero, so we know that the user wants to get a subset of comments,
+            # we just needed to make sure that we had enough in the first place.
+            # Now that we know we do, let's subset out comment list.
             subreddit_submission_ids = subreddit_submission_ids[: max_number_of_submissions_to_analyze]
 
         # This will have records appended to it to keep track of positive and negative results.
@@ -171,7 +176,8 @@ class SubRedditAnalyzer():
 
             # They want to see the rating for each submission post.
             if display_all_submission_results:
-                print(f'{subreddit_name}:')
+                print(f'Subreddit: {subreddit_name}:')
+                print(f'Submission_id: {submission_id}:')
                 print(f"Positivity Rating: {average_results_for_subreddit['positive']}")
                 print(f"Negativity Rating: {average_results_for_subreddit['negative']}\n")
 
@@ -187,7 +193,7 @@ class SubRedditAnalyzer():
 
         # They wanna show the averages in the method.
         if display_all_submission_results:
-            print(f'\nResults of all comments for submission: "{subreddit_name}"')
+            print(f'\nResults of all comments for : "{subreddit_name}"')
             print("Average positivity: {:2f}%".format(average_results_for_subreddit['positive'] * 100))
             print("Average negativity: {:2f}%".format(average_results_for_subreddit['negative'] * 100))
             print(f"Total time: {datetime.datetime.now() - start_time}")
