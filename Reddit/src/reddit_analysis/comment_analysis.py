@@ -47,11 +47,63 @@ class SubRedditAnalyzer():
         edit their stop_word list, or change it's language.
         """
         self.__comment_preprocessor = RedditPreprocessor(self.__reddit_collection)
+        
+        """
+        There are the options that a user can use as a sorting type.
+        Anything else will trigger an error, if it is not in our set.
+        """
+        self.__valid_sorting_types = {'new', 'top', 'hot', None}
+
+    
+    # PRIVATE METHODS__________________________________________________________________________________
+
+
+    def __check_analysis_paramters_are_valid_raise_exception(self, sorting_type_option,
+                                                             max_number_of_comments_option=None,
+                                                             max_number_of_submissions_option=None):
+        """
+        (Helper method)
+        Make sure that the paramters passed to our analysis methods are valid.
+        If the are not valid, then we throw an exception for the specific issue.
+
+        Arguments:
+            sorting_type_option {str or None} -- The sorting method that the user wants
+                                                 to use to query data.
+            max_number_of_comments_option {int} -- Represents the amount of comments to query.
+                                                   We need to make sure it of a valid length.
+            max_number_of_submissions_option {int} -- Represents the max number of submissions that
+                                                      will be analyzed. We need to make sure it is
+                                                      in a certain range.
+
+        Raises:
+            ValueError: When sorting type is not valid.
+            ValueError: When max_number_of_comments_option is negative.
+            ValueError: When max_number_of_submissions_option is negative.
+        """
+
+        if sorting_type_option not in self.__valid_sorting_types:
+            raise ValueError(f"Error: sorting type must be of the following options: "
+                             "{self.__valid_sorting_types}.")
+    
+        if max_number_of_comments_option and max_number_of_comments_option < 0:
+            raise ValueError('max_number_of_comments_to_analyze must be a positivity.')
+
+        if max_number_of_submissions_option and max_number_of_submissions_option < 0:
+            raise ValueError('max_number_of_comments_to_analyze must be a positivity.')
+
+
+    # PUBLIC INTERFACE_________________________________________________________________________________
 
 
     def analyze_submission(self, submission_id, sorting_type=None,
                            display_all_comment_results=False,
                            max_number_of_comments_to_analyze=0):
+        
+        # Before we do anything, we want to make sure that the values that the user
+        # Passed in are valid, otherwise we need to trigger an error, before doing
+        # a bunch of time costly analysis.
+        self.__check_analysis_paramters_are_valid_raise_exception(sorting_type,
+                                                                  max_number_of_comments_to_analyze)
         
         preprocessed_submission_comments =\
             self.__comment_preprocessor.get_preprocessed_comments(submission_id,
@@ -67,23 +119,21 @@ class SubRedditAnalyzer():
                 self.__comment_sentiment_analyzer.polarity_scores(comment)
 
             # Comment might not be positive or negative, so by default it is ignored.
-            # It will be set later.
+            # It will be set later if we find the comment to be positive or negative.
             classification_to_print_out = "Ignored"
 
-            # Concluded comment is positive.
-            if(
+            if(             
+                # Concluded comment is positive.
                 analysis_results_of_comment['compound'] >= 0.05 or \
                 analysis_results_of_comment['neg'] == 0 and analysis_results_of_comment['pos'] > 0
             ):
                 positive_comment_results.append(analysis_results_of_comment['compound'])
                 classification_to_print_out = "Positive"
-
-            # Concluded comment is negative.
             elif(
+                # Concluded comment is negative.
                 analysis_results_of_comment['compound'] <= -0.05 or \
                 analysis_results_of_comment['pos'] == 0 and analysis_results_of_comment['neg'] > 0
             ):
-                # We have a negative comment.
                 negative_comment_results.append(abs(analysis_results_of_comment['compound']))
                 classification_to_print_out = "Negative"
 
@@ -91,11 +141,11 @@ class SubRedditAnalyzer():
             if display_all_comment_results:
                 try:
                     subreddit_name =\
-                        self.__reddit_collection.find_one(
-                            {'submission': submission_id})['subreddit_name']
+                        self.__reddit_collection.find_one({'submission': submission_id}
+                                                         )['subreddit_name']
                 except CursorNotFound:
-                    # Might not have a subreddit_name as a field for this one, so
-                    # we default it if not found.
+                    # Might not have a subreddit_name as a field for this one, so we
+                    # Need a default label for this sort of situation.
                     subreddit_name = "NONE"
 
                 # Now we can actually...show the results the user wants to see.
@@ -130,29 +180,41 @@ class SubRedditAnalyzer():
                           display_all_submission_results=False,
                           max_number_of_comments_to_analyze=0,
                           max_number_of_submissions_to_analyze=0):
-        start_time = datetime.datetime.now()
         
-        # This gives us a list of strings, with each str being a distinct subreddit_id.
-        subreddit_submission_ids =\
-            self.__reddit_collection.find(
-                {'subreddit_name': subreddit_name}
-                ).distinct('submission')
+        # Before we do anything, we want to make sure that the values that the user
+        # Passed in are valid, otherwise we need to trigger an error, before doing
+        # a bunch of time costly analysis.
+        self.__check_analysis_paramters_are_valid_raise_exception(sorting_type,
+                                                                  max_number_of_comments_to_analyze,
+                                                                  max_number_of_submissions_to_analyze)
+        # We can tell the user how long an analysis took for a full subreddit.
+        start_time = datetime.datetime.now()
 
-        # There are no posts from the subreddits.
+        subreddit_submission_ids = []
+        if sorting_type:
+            # User only wants to get posts of given sorting type.
+            subreddit_submission_ids = self.__reddit_collection.find({'subreddit_name': subreddit_name,
+                                                                      'sorting_type': sorting_type}
+                                                                     ).distinct('submission')
+        else:
+            # User did NOT give us a sorting type, so just grab everything.
+            subreddit_submission_ids = self.__reddit_collection.find({'subreddit_name': subreddit_name}
+                                                                     ).distinct('submission')
+
+        # No posts found in subreddit.
         if len(subreddit_submission_ids) == 0:
-           # We should let the user know.
             if display_all_comment_results or display_all_submission_results:
                 print(f'No posts were found for the subreddit {subreddit_name}')
-            # Since there are no submissions our scores are both going to be zero.
             return {'positive': 0, 'negative': 0}
-        
-        # We only want to grab the amount of submissions that the user wants us to.
-        # We take the first n amount.
-        if len(subreddit_submission_ids) > max_number_of_submissions_to_analyze and \
-           max_number_of_submissions_to_analyze !=0:
+
+        # We only want to grab the amount of submissions that the user wants us to,
+        # so we need to make sure not to exceed the amount that exist.
+        if(
+            len(subreddit_submission_ids) > max_number_of_submissions_to_analyze and \
+            max_number_of_submissions_to_analyze != 0
+        ):
             # It is not zero, so we know that the user wants to get a subset of comments,
             # we just needed to make sure that we had enough in the first place.
-            # Now that we know we do, let's subset out comment list.
             subreddit_submission_ids = subreddit_submission_ids[: max_number_of_submissions_to_analyze]
 
         # This will have records appended to it to keep track of positive and negative results.
@@ -167,12 +229,10 @@ class SubRedditAnalyzer():
                                         max_number_of_comments_to_analyze=\
                                             max_number_of_comments_to_analyze)
 
-            average_results_for_subreddit['positive'] += \
-                analysis_results_of_submission['positive']
+            average_results_for_subreddit['positive'] += analysis_results_of_submission['positive']
 
             # These values are negative, need to take abs.
-            average_results_for_subreddit['negative'] += \
-                analysis_results_of_submission['negative']
+            average_results_for_subreddit['negative'] += analysis_results_of_submission['negative']
 
             # They want to see the rating for each submission post.
             if display_all_submission_results:

@@ -6,7 +6,7 @@ from credentials.mongo_credentials import DB_COLLECTION
 
 
 def test_subreddit_call(analyzer):
-    hmft_anylsis_results = analyzer.analyze_subreddit('battlestations',
+    hmft_anylsis_results = analyzer.analyze_subreddit('battlestations', sorting_type='top',
                                                       display_all_submission_results=True,
                                                       display_all_comment_results=False)
 
