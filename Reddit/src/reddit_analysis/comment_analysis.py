@@ -16,7 +16,11 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 class SubRedditAnalyzer():
     """
-    More on this later.
+    Given a Mongodb database instance we are able to run sentiment analysis
+    to analyzing given reddit submissions and subreddits as well.
+    
+    Using this object we can get the results for the positivity and negativity
+    of a given subreddit or submission.
     """
 
     def __init__(self, mongo_reddit_collection):
@@ -36,10 +40,6 @@ class SubRedditAnalyzer():
         give us a score of polarity (positivity, negativity, neutral, and Compound). 
         """
         self.__comment_sentiment_analyzer = SentimentIntensityAnalyzer()
-
-        # Make sure that the passed in database has all of the following fields.
-        # It NEEDS to fit the form of our comment model, or we cannot analyze it.
-        # TODO
         
         """
         RedditPreprocessor that is used for preprocessing all of the comments that we will be
@@ -89,7 +89,7 @@ class SubRedditAnalyzer():
             raise ValueError('max_number_of_comments_to_analyze must be a positivity.')
 
         if max_number_of_submissions_option and max_number_of_submissions_option < 0:
-            raise ValueError('max_number_of_comments_to_analyze must be a positivity.')
+            raise ValueError('max_number_of_submissions_to_analyze must be a positivity.')
 
 
     # PUBLIC INTERFACE_________________________________________________________________________________
@@ -105,7 +105,7 @@ class SubRedditAnalyzer():
         self.__check_analysis_paramters_are_valid_raise_exception(sorting_type,
                                                                   max_number_of_comments_to_analyze)
         
-        preprocessed_submission_comments =\
+        preprocessed_submission_comments = \
             self.__comment_preprocessor.get_preprocessed_comments(submission_id,
                                                                   max_number_of_comments_to_analyze,
                                                                   sorting_type=sorting_type)
@@ -137,12 +137,12 @@ class SubRedditAnalyzer():
                 negative_comment_results.append(abs(analysis_results_of_comment['compound']))
                 classification_to_print_out = "Negative"
 
-            # The user wants us to show the scoring for all comments that we are analyzing.
             if display_all_comment_results:
+                # We want the user to know what subreddit a submission is from, since
+                # we are running analysis on it and wanna make a neat little image.
                 try:
-                    subreddit_name =\
-                        self.__reddit_collection.find_one({'submission': submission_id}
-                                                         )['subreddit_name']
+                    subreddit_name = self.__reddit_collection.find_one({'submission': submission_id}
+                                                                       )['subreddit_name']
                 except CursorNotFound:
                     # Might not have a subreddit_name as a field for this one, so we
                     # Need a default label for this sort of situation.
