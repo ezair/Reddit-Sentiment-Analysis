@@ -210,7 +210,7 @@ class SubredditAnalyzer():
                                                   comments. (default: {False})\n
             display_all_submission_results {bool} -- True if user wants to display all analysis results
                                                      of each submission in the subreddit.
-                                                     (default: {False})
+                                                     (default: {False})\n
             max_number_of_comments_to_analyze {int} -- The max number of comments that we will analyze
                                                        for positivity and negativity. (default: {0})\n
             max_number_of_submissions_to_analyze {int} -- The max number of submissions that we are
