@@ -18,68 +18,63 @@ class SubRedditAnalyzer():
     """
     Given a Mongodb database instance we are able to run sentiment analysis
     to analyzing given reddit submissions and subreddits as well.
-    
+
     Using this object we can get the results for the positivity and negativity
     of a given subreddit or submission.
     """
 
-    def __init__(self, mongo_reddit_collection):
-        """
-        The MongDB collection that we will be pulling our reddit data from.
+    def __init__(self, mongo_reddit_collection, language='english'):
+        """Constructs a SubRedditAnalyzer object."""
 
+        """MongDB collection that we will be pulling our reddit data from...
         The database must have the following fielding fields in it:
             body, created_at, distinguished, edited, id, is_submitter
             link_id, parent_id, replies, score, stickied, submission
-            subreddit, sorting_type': sorting_type
-        """
+            subreddit, sorting_type """
         self.__reddit_collection = mongo_reddit_collection
 
-        """
-        This is an out of the box Sentiment Analyzer model that is exceptionally good
+        """This is an out of the box Sentiment Analyzer model that is exceptionally good
         at analyzing social media data. We will feed individual comments to it and it will
-        give us a score of polarity (positivity, negativity, neutral, and Compound). 
-        """
+        give us a score of polarity (positivity, negativity, neutral, and Compound)."""
         self.__comment_sentiment_analyzer = SentimentIntensityAnalyzer()
-        
-        """
-        RedditPreprocessor that is used for preprocessing all of the comments that we will be
+
+        """RedditPreprocessor that is used for preprocessing all of the comments that we will be
         analyzing. This object can later be configured by the user, in the event that they want
-        edit their stop_word list, or change it's language.
-        """
+        edit their stop_word list, or change it's language."""
         self.__comment_preprocessor = RedditPreprocessor(self.__reddit_collection)
-        
-        """
-        There are the options that a user can use as a sorting type.
-        Anything else will trigger an error, if it is not in our set.
-        """
+
+        """There are the options that a user can use as a sorting type.
+        Anything else will trigger an error, if it is not in our set."""
         self.__valid_sorting_types = {'new', 'top', 'hot', None}
 
-    
+
     # PRIVATE METHODS__________________________________________________________________________________
 
 
     def __check_analysis_paramters_are_valid_raise_exception(self, sorting_type_option,
                                                              max_number_of_comments_option=None,
                                                              max_number_of_submissions_option=None):
-        """
-        (Helper method)
-        Make sure that the paramters passed to our analysis methods are valid.
+        """(Helper method)
+        Method used to Make sure that the paramters passed to our analysis methods are valid.
         If the are not valid, then we throw an exception for the specific issue.
 
         Arguments:
             sorting_type_option {str or None} -- The sorting method that the user wants
                                                  to use to query data.
+
             max_number_of_comments_option {int} -- Represents the amount of comments to query.
                                                    We need to make sure it of a valid length.
+
             max_number_of_submissions_option {int} -- Represents the max number of submissions that
                                                       will be analyzed. We need to make sure it is
                                                       in a certain range.
 
         Raises:
             ValueError: When sorting type is not valid.
+
             ValueError: When max_number_of_comments_option is negative.
-            ValueError: When max_number_of_submissions_option is negative.
-        """
+
+            ValueError: When max_number_of_submissions_option is negative."""
 
         if sorting_type_option not in self.__valid_sorting_types:
             raise ValueError(f"Error: sorting type must be of the following options: "
@@ -98,13 +93,33 @@ class SubRedditAnalyzer():
     def analyze_submission(self, submission_id, sorting_type=None,
                            display_all_comment_results=False,
                            max_number_of_comments_to_analyze=0):
-        
+        """Returns a dictionary containing the positivity and negativity of a submission.
+
+        Arguments:
+            submission_id {str} -- The reddit submission id of the submission you want to analyze.
+
+        Keyword Arguments:
+            sorting_type {str} -- Determines the type of comments you want to parse.
+                                  Must be one of the following: 'hot', 'top', or 'new'
+                                  (None is valid as well) (default: {None})
+
+            display_all_comment_results {bool} -- True if user wants to seethe analysis results of each
+                                                  comment; False otherwise. (default: {False})
+
+            max_number_of_comments_to_analyze {int} -- This is the max amount of comments that we want to
+                                                       analyze for a given submission.
+                                                       A value of 0 means that we will collect all comments.
+                                                       (default: {0})
+
+        Returns:
+            {dict} -- A dictionary in the form of {'positive': int_value, 'negative', int value}"""
+
         # Before we do anything, we want to make sure that the values that the user
         # Passed in are valid, otherwise we need to trigger an error, before doing
         # a bunch of time costly analysis.
         self.__check_analysis_paramters_are_valid_raise_exception(sorting_type,
                                                                   max_number_of_comments_to_analyze)
-        
+
         preprocessed_submission_comments = \
             self.__comment_preprocessor.get_preprocessed_comments(submission_id,
                                                                   max_number_of_comments_to_analyze,
@@ -180,15 +195,41 @@ class SubRedditAnalyzer():
                           display_all_submission_results=False,
                           max_number_of_comments_to_analyze=0,
                           max_number_of_submissions_to_analyze=0):
-        
+        """Return a dictionary containing the positive and negative results of a given subreddit.
+
+        Arguments:
+            subreddit_name {str} -- The subreddit that we want to analyze.
+
+        Keyword Arguments:
+            sorting_type {str} -- The type of posts that we will grab. either 'hot', 'top', 'new'.
+                                  (default: {None})
+
+            display_all_comment_results {bool} -- True if user wants to display analysis results of
+                                                  comments. (default: {False})
+
+            display_all_submission_results {bool} -- True if user wants to display all analysis results
+                                                     of each submission in the subreddit.
+                                                     (default: {False})
+
+            max_number_of_comments_to_analyze {int} -- The max number of comments that we will analyze
+                                                       for positivity and negativity. (default: {0})
+
+            max_number_of_submissions_to_analyze {int} -- The max number of submissions that we are
+                                                          going to analyze for positivity and
+                                                          negativity. (default: {0})
+
+        Returns:
+            dict -- Dictionary containing the positivity and negativity of a given subreddit.
+                    {'positive': int, 'negative': int}"""
+
         # Before we do anything, we want to make sure that the values that the user
         # Passed in are valid, otherwise we need to trigger an error, before doing
         # a bunch of time costly analysis.
         self.__check_analysis_paramters_are_valid_raise_exception(sorting_type,
                                                                   max_number_of_comments_to_analyze,
                                                                   max_number_of_submissions_to_analyze)
-        # We can tell the user how long an analysis took for a full subreddit.
-        start_time = datetime.datetime.now()
+
+        analysis_start_time = datetime.datetime.now()
 
         subreddit_submission_ids = []
         if sorting_type:
@@ -204,7 +245,7 @@ class SubRedditAnalyzer():
         # No posts found in subreddit.
         if len(subreddit_submission_ids) == 0:
             if display_all_comment_results or display_all_submission_results:
-                print(f'No posts were found for the subreddit {subreddit_name}')
+                print(f'No submissions were found for the subreddit {subreddit_name}.')
             return {'positive': 0, 'negative': 0}
 
         # We only want to grab the amount of submissions that the user wants us to,
@@ -230,8 +271,6 @@ class SubRedditAnalyzer():
                                             max_number_of_comments_to_analyze)
 
             average_results_for_subreddit['positive'] += analysis_results_of_submission['positive']
-
-            # These values are negative, need to take abs.
             average_results_for_subreddit['negative'] += analysis_results_of_submission['negative']
 
             # They want to see the rating for each submission post.
@@ -240,6 +279,8 @@ class SubRedditAnalyzer():
                 print(f'Submission_id: {submission_id}:')
                 print(f"Positivity Rating: {average_results_for_subreddit['positive']}")
                 print(f"Negativity Rating: {average_results_for_subreddit['negative']}\n")
+
+        analysis_end_time = datetime.datetime.now()
 
         # We can use this as our divisor in following calculations, so that we can
         # get average score for positivity and the average score for negativity.
@@ -256,7 +297,7 @@ class SubRedditAnalyzer():
             print(f'\nResults of all comments for : "{subreddit_name}"')
             print("Average positivity: {:2f}%".format(average_results_for_subreddit['positive'] * 100))
             print("Average negativity: {:2f}%".format(average_results_for_subreddit['negative'] * 100))
-            print(f"Total time: {datetime.datetime.now() - start_time}")
+            print(f"Total time: {analysis_end_time - analysis_start_time}")
 
         return average_results_for_subreddit
 

@@ -6,33 +6,27 @@ from nltk.tokenize import RegexpTokenizer
 
 
 class RedditPreprocessor():
-    """
-    TBA
-    """
 
 
-    def __init__(self, mongo_reddit_collection):
-        """
-        Since we are analyzing english, we will use a already created (and tested)
+    def __init__(self, mongo_reddit_collection, language='english'):
+        """Since we are analyzing english, we will use a already created (and tested)
         set of stopwords that.
         Every word in here is a word that is not worth analyzing in a given comment.
-        These are the kind of words that can make or break your analysis results.
-        """
-        self.__stop_words = stopwords.words('english')
+        These are the kind of words that can make or break your analysis results."""
+        self.__stop_words = stopwords.words(language)
         
-        """
-        The MongDB collection that we will be pulling our reddit data from.
+        """The MongDB collection that we will be pulling our reddit data from.
 
         The database must have the following fielding fields in it:
             body, created_at, distinguished, edited, id, is_submitter
             link_id, parent_id, replies, score, stickied, submission
-            subreddit, sorting_type': sorting_type
-        """
+            subreddit, sorting_type, sorting_type"""
         self.__reddit_collection = mongo_reddit_collection
 
 
     def get_preprocessed_comment(self, comment):
         filtered_tokens_in_comment = []
+
         # We don't wanna have any punctuation in our comment.
         tokenizer = RegexpTokenizer(r'\w+')
         tokenized_comment = tokenizer.tokenize(comment)
@@ -89,9 +83,9 @@ class RedditPreprocessor():
             [self.get_preprocessed_comment(comment) for comment in submission_comments_as_strings]
 
         return preprocessed_comments_for_submission
-    
 
-    def add_words_to_stop_word_list(list_of_words_to_add):
+
+    def add_words_to_stop_word_list(self, list_of_words_to_add):
         # The thing we append better be a list.
         if type(list_of_words_to_add) != "list":
             raise ValueError(f"Error in add_words_to_stop_list: {list_of_words_to_add} is not"
@@ -101,11 +95,8 @@ class RedditPreprocessor():
         for word in list_of_words_to_add:
             if type(word) != "str":
                 raise ValueError(f"Error in add_words_to_stop_list: {word} is not of type str")
+            # Words that we add need to be lowercase, just like our in our stop words list.
+            self.__stop_words.append(word.lower())
 
         # It was a list of strings, we are all good.
         self.__stop_words += list_of_words_to_add
-
-
-    # TODO.
-    def change_language_of_stop_word_list(language_as_a_string):
-        pass
