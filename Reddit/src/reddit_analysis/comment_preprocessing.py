@@ -15,14 +15,16 @@ from nltk.tokenize import RegexpTokenizer
 
 
 class RedditPreprocessor():
- """Given a Mongodb database instance we are able to grab the data stored in the
+    """Given a Mongodb database instance we are able to grab the data stored in the
     database and query comments. We can preprocess the queried for comments or just
     preprocess comments given to this object in general."""
 
 
     def __init__(self, mongo_reddit_collection, language='english'):
-        """ Constructs a RedditPreprocessor object."""
-        
+        """ Constructs a RedditPreprocessor object.
+        The user actually has the option to pass in whatever language
+        that they wanna analyze in. Example: english or spanish."""
+
         """Since we are analyzing english, we will use a already created (and tested)
         set of stopwords that.
         Every word in here is a word that is not worth analyzing in a given comment.

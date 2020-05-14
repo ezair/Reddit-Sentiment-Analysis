@@ -1,5 +1,8 @@
 """
-later.
+@Author Eric Zair
+@File reddit_post_collector.py
+@Description: This is a simple test program that is used to show off the
+              power behind the SubredditAnalyzer object :)
 """
 from reddit_analysis.comment_analysis import SubRedditAnalyzer
 from credentials.mongo_credentials import DB_COLLECTION
