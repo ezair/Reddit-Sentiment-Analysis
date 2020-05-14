@@ -1,6 +1,6 @@
 """
 @Author Eric Zair
-@File comment_preprocessing.py
+@File comment_analysis.py
 @Description: Contains an object, SubredditAnalyzer, which is used for running sentiment analysis on
               the comments of a given subreddit or a given submission. The comments that we are
               analyzing are stored in a mongodb database.
