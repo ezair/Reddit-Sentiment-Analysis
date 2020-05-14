@@ -21,7 +21,7 @@ def test_submission_call(analyzer):
 
 def main():
     # This just a test example program currently.
-    reddit_analyzer = SubRedditAnalyzer(DB_COLLECTION)
+    reddit_analyzer = SubredditAnalyzer(DB_COLLECTION)
 
     test_subreddit_call(reddit_analyzer)
     #test_submission_call(reddit_analyzer)    

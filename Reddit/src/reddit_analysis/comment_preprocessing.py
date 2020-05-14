@@ -1,3 +1,12 @@
+"""
+@Author Eric Zair
+@File comment_preprocessing.py
+@Description: Contains an object, RedditPreprocessor, which is used to preprocesses
+              comments from reddit submission or just reddit comments given to it
+              in general.
+
+@package docstring
+"""
 # For data preprocessing and frequency analysis.
 import nltk
 from nltk.corpus import stopwords
@@ -6,6 +15,9 @@ from nltk.tokenize import RegexpTokenizer
 
 
 class RedditPreprocessor():
+ """Given a Mongodb database instance we are able to grab the data stored in the
+    database and query comments. We can preprocess the queried for comments or just
+    preprocess comments given to this object in general."""
 
 
     def __init__(self, mongo_reddit_collection, language='english'):
@@ -27,6 +39,16 @@ class RedditPreprocessor():
 
 
     def get_preprocessed_comment(self, comment):
+        """Return a list of preprocessed reddit comments. Comments are ready for analysis.
+
+        Arguments:\n
+            comment {str} -- The comment that we will preprocess so that it is ready to be
+                             used for analysis.
+
+        Returns:\n
+            str -- The preprocessed version of the comment. Stripped to lowercase,
+                   punctuation removed, each word in the comment is stemmed."""
+
         filtered_tokens_in_comment = []
 
         # We don't wanna have any punctuation in our comment.
@@ -51,6 +73,25 @@ class RedditPreprocessor():
 
     def __get_comment_objects_for_submission(self, submission_id, number_of_comments_to_get,
                                              sorting_type=None):
+        """Return a list of comment objects. The type of sorting_type given will determine the
+        type of comments that we are querying for. If no sorting type is None, then we grab any
+        comments from the submission.
+
+        Arguments:\n
+            submission_id {str} -- The id of the reddit submission that we are pulling comments from.
+            number_of_comments_to_get {int} -- The amount of comments we pull from the submission\n
+
+        Keyword Arguments:\n
+            sorting_type {str} -- The type of comments that we are querying for.
+                                  Either 'hot', 'top', or 'new'. If None is given, then we just pull
+                                  any comment without using sorting type. (default: {None})
+
+        Raises:\n
+            ValueError: If the user passes something that is not 'hot', 'new', 'top', or 'None'.
+
+        Returns:\n
+            Comment -- A reddit comment object from the praw API."""
+        
         if sorting_type:
             if sorting_type not in ['hot', 'new', 'top']:
                 # The user might not have passed in a valid sorting type.
@@ -68,7 +109,21 @@ class RedditPreprocessor():
 
     def get_preprocessed_comments(self, submission_id, number_of_comments_to_get,
                                   sorting_type=None):
-         # Varying on the sorting type that is passed in, we will query on it.
+        """Return a list of preprocessed comments, each comment is a str.
+
+        Arguments:\n
+            submission_id {str} -- The id of the submission that we are grabbing comments for.
+            number_of_comments_to_get {int} -- The amount of comments that we are going to grab.
+
+        Keyword Arguments:\n
+            sorting_type {str} -- The type of comments that we want to grab.
+                                Must be 'new', 'top', 'hot'. If None is given, we grab any type
+                                of comment. (default: {None})
+
+        Returns:\n
+        list -- A list of preprocessed comments. Each comment in the list is a str."""
+
+        # Varying on the sorting type that is passed in, we will query on it.
         # if no sorting type is given, then we just grab all posts for the submission.
         submission_comment_objects =\
             self.__get_comment_objects_for_submission(submission_id, number_of_comments_to_get,
@@ -88,14 +143,18 @@ class RedditPreprocessor():
 
 
     def add_words_to_stop_word_list(self, list_of_words_to_add):
-        # The thing we append better be a list.
-        if type(list_of_words_to_add) != "list":
-            raise ValueError(f"Error in add_words_to_stop_list: {list_of_words_to_add} is not"
-                             "is not of type 'list'.")
+        """Append each element in a given list of words to our list of stop_words.
+           Each appended word is AUTOMATICALLY converted to lowercase.
+
+        Arguments:\n
+            list_of_words_to_add {list} -- A list of words to append to our stop_words list.
+
+        Raises:\n
+            ValueError: An element of the given list is not of type string."""
 
         # Again... we really wanna make sure we add the correct things to the list.
         for word in list_of_words_to_add:
-            if type(word) != "str":
+            if type(word) != str:
                 raise ValueError(f"Error in add_words_to_stop_list: {word} is not of type str")
             # Words that we add need to be lowercase, just like our in our stop words list.
             self.__stop_words.append(word.lower())

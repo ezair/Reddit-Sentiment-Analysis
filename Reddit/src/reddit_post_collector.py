@@ -1,10 +1,11 @@
 """
 @Author Eric Zair
-@File collect.py
+@File reddit_post_collector.py
 @Description: This program uses the praw (reddit api) to parse data from
               given sub-reddits. These sub-reddits are located in a file
               called "sub_reddits.txt" and the user can add and remove
               sub_reddits to the program via the program flags.
+
 @package docstring
 """
 # Do we wanna add, remove, or collect?
@@ -32,10 +33,10 @@ def get_argument_parser_containing_program_flag_information():
     """Returns Loads up an argument_parser object with the value that the
     command line argument that the user gave to the program.
 
-    NOTE: There is only ONE command line argument that has been passed by the
+    *NOTE*: There is only ONE command line argument that has been passed by the
     user contained in here!
 
-    Returns:
+    Returns:\n
         parser {argparse.ArgumentParser} -- Contains the single command line
                                             argument that the user passed into
                                             the program."""
@@ -62,15 +63,14 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
                                path_to_sub_reddit_file=SUB_REDDIT_LIST, reddit=API_INSTANCE):
     """Appends a sub_reddit to the end of the file that is given by the user.
 
-    Arguments:
+    Arguments:\n
         parsed_command_line_arguments {namespace} -- Namespace object that contains the values of
                                                      each given command line argument that is
                                                      passed into the program.
 
-    Keyword Arguments:
+    Keyword Arguments:\n
         path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits
-                                         that we will add to.
-                                         (default: {SUB_REDDIT_LIST})"""
+                                         that we will add to.(default: {SUB_REDDIT_LIST})"""
 
     # We only want to add a subreddit to the list one time,
     # so we do not want to allow duplicates. It will ruin our data.
@@ -89,12 +89,12 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     """Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
 
-    Arguments:
+    Arguments:\n
         parsed_command_line_arguments {namespace} -- Namespace object that contains the values of
                                                      each given command line argument that is
                                                      passed into the program.
 
-    Keyword Arguments:
+    Keyword Arguments:\n
         path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits to
                                          remove from.
                                          (default: {SUB_REDDIT_LIST})"""
@@ -117,7 +117,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
     """Returns a list containing the sub_reddits that a user want to analyze
     data off of (given from the path_to_sub_reddit_file)
 
-    Keyword Arguments:
+    Keyword Arguments:\n
         path_to_sub_reddit_file {str} -- Path to the file that contains the sub_reddits.
                                          (default: {SUB_REDDIT_LIST})
 
@@ -130,10 +130,10 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
 def sub_reddit_exists(sub_reddit_name):
     """Determines whether a given subreddit exists.
 
-    Arguments:
+    Arguments:\n
         sub_reddit_name {str} -- The subreddit that we wanna find out exists or not.
 
-    Returns:
+    Returns:\n
         bool -- True if subreddit exists, False otherwise."""
 
     # The praw API Has NO way way of knowing if a subreddit exists or not.
@@ -151,7 +151,7 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
     """Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
 
-    Arguments:
+    Arguments:\n
         list_of_sub_reddits {list(str)} -- Contains the names of all the
                                            sub-reddits that a user wants
                                            to parse comments from.\n
@@ -165,7 +165,7 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
         reddit_api {Reddit} -- API_INSTANCE required to use the program
                                (default: {API_INSTANCE})
 
-    Returns:
+    Returns:\n
         {list(str)} -- List containing all comments from our the subreddits
                        that the user has in their sub reddit file."""
 
@@ -202,7 +202,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
     """Put every reddit comment contained in "reddit_submission_comments" into
     the given mongo db database collection.
 
-    Arguments:
+    Arguments:\n
         reddit_submission_comments {list} -- Contains reddit_comments for a
                                             particular post stored in strings.\n
         sorting_type {str} -- This is either 'hot', 'new', or 'top'.
@@ -210,7 +210,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
                               so that we know which sorting_type it used and can later query by
                               sorting type if need be.
 
-    Keyword Arguments:
+    Keyword Arguments:\n
         db_collection {mongoDB Database} -- The database that we are putting
                                             all of the reddit comments in.
                                             (default: {DB_COLLECTION})"""
@@ -264,7 +264,7 @@ def get_post_sorting_type_from_user():
     """Prompt the user to decide the sorting method that they will want to use to collect posts
     The options are Hot posts, New posts, and Top posts.
 
-    Returns:
+    Returns:\n
         str -- string containing either 'hot', 'new', or 'top'"""
 
     # post_sort_option will contain an integer value that we will use to figure out
