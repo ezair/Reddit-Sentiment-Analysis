@@ -9,6 +9,8 @@ class RedditPreprocessor():
 
 
     def __init__(self, mongo_reddit_collection, language='english'):
+        """ Constructs a RedditPreprocessor object."""
+        
         """Since we are analyzing english, we will use a already created (and tested)
         set of stopwords that.
         Every word in here is a word that is not worth analyzing in a given comment.

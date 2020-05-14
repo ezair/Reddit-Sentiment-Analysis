@@ -15,22 +15,22 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 class SubRedditAnalyzer():
-    """
-    Given a Mongodb database instance we are able to run sentiment analysis
+    """Given a Mongodb database instance we are able to run sentiment analysis
     to analyzing given reddit submissions and subreddits as well.
 
     Using this object we can get the results for the positivity and negativity
-    of a given subreddit or submission.
-    """
+    of a given subreddit or submission."""
+
 
     def __init__(self, mongo_reddit_collection, language='english'):
         """Constructs a SubRedditAnalyzer object."""
 
-        """MongDB collection that we will be pulling our reddit data from...
+        """MongDB collection that we will be pulling our reddit data from.
+
         The database must have the following fielding fields in it:
             body, created_at, distinguished, edited, id, is_submitter
             link_id, parent_id, replies, score, stickied, submission
-            subreddit, sorting_type """
+            subreddit, sorting_type."""
         self.__reddit_collection = mongo_reddit_collection
 
         """This is an out of the box Sentiment Analyzer model that is exceptionally good
@@ -56,24 +56,20 @@ class SubRedditAnalyzer():
                                                              max_number_of_submissions_option=None):
         """(Helper method)
         Method used to Make sure that the paramters passed to our analysis methods are valid.
-        If the are not valid, then we throw an exception for the specific issue.
+        If the are not valid, then we throw an exception for the specific issue.\n
 
         Arguments:
             sorting_type_option {str or None} -- The sorting method that the user wants
-                                                 to use to query data.
-
+                                                 to use to query data.\n
             max_number_of_comments_option {int} -- Represents the amount of comments to query.
-                                                   We need to make sure it of a valid length.
-
+                                                   We need to make sure it of a valid length.\n
             max_number_of_submissions_option {int} -- Represents the max number of submissions that
                                                       will be analyzed. We need to make sure it is
                                                       in a certain range.
 
         Raises:
-            ValueError: When sorting type is not valid.
-
-            ValueError: When max_number_of_comments_option is negative.
-
+            ValueError: When sorting type is not valid.\n
+            ValueError: When max_number_of_comments_option is negative.\n
             ValueError: When max_number_of_submissions_option is negative."""
 
         if sorting_type_option not in self.__valid_sorting_types:
@@ -101,11 +97,9 @@ class SubRedditAnalyzer():
         Keyword Arguments:
             sorting_type {str} -- Determines the type of comments you want to parse.
                                   Must be one of the following: 'hot', 'top', or 'new'
-                                  (None is valid as well) (default: {None})
-
+                                  (None is valid as well) (default: {None})\n
             display_all_comment_results {bool} -- True if user wants to seethe analysis results of each
-                                                  comment; False otherwise. (default: {False})
-
+                                                  comment; False otherwise. (default: {False})\n
             max_number_of_comments_to_analyze {int} -- This is the max amount of comments that we want to
                                                        analyze for a given submission.
                                                        A value of 0 means that we will collect all comments.
@@ -202,21 +196,17 @@ class SubRedditAnalyzer():
 
         Keyword Arguments:
             sorting_type {str} -- The type of posts that we will grab. either 'hot', 'top', 'new'.
-                                  (default: {None})
-
+                                  (default: {None})\n
             display_all_comment_results {bool} -- True if user wants to display analysis results of
-                                                  comments. (default: {False})
-
+                                                  comments. (default: {False})\n
             display_all_submission_results {bool} -- True if user wants to display all analysis results
                                                      of each submission in the subreddit.
                                                      (default: {False})
-
             max_number_of_comments_to_analyze {int} -- The max number of comments that we will analyze
-                                                       for positivity and negativity. (default: {0})
-
+                                                       for positivity and negativity. (default: {0})\n
             max_number_of_submissions_to_analyze {int} -- The max number of submissions that we are
                                                           going to analyze for positivity and
-                                                          negativity. (default: {0})
+                                                          negativity. (default: {0})\n
 
         Returns:
             dict -- Dictionary containing the positivity and negativity of a given subreddit.

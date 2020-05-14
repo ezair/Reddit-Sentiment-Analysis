@@ -5,7 +5,6 @@
               given sub-reddits. These sub-reddits are located in a file
               called "sub_reddits.txt" and the user can add and remove
               sub_reddits to the program via the program flags.
-
 @package docstring
 """
 # Do we wanna add, remove, or collect?
@@ -24,16 +23,13 @@ from credentials.reddit_credentials import API_INSTANCE
 from credentials.mongo_credentials import DB_COLLECTION
 
 
-"""
-Default location that program searches for our sub reddit list.
-Change this variable if you want run program on a different sub_reddit_list.
-"""
+"""Default location that program searches for our sub reddit list.
+Change this variable if you want run program on a different sub_reddit_list."""
 SUB_REDDIT_LIST = "sub_reddit_list.sub"
 
 
 def get_argument_parser_containing_program_flag_information():
-    """
-    Returns Loads up an argument_parser object with the value that the
+    """Returns Loads up an argument_parser object with the value that the
     command line argument that the user gave to the program.
 
     NOTE: There is only ONE command line argument that has been passed by the
@@ -42,8 +38,7 @@ def get_argument_parser_containing_program_flag_information():
     Returns:
         parser {argparse.ArgumentParser} -- Contains the single command line
                                             argument that the user passed into
-                                            the program.
-    """
+                                            the program."""
 
     parser = argparse.ArgumentParser()
 
@@ -65,8 +60,7 @@ def get_argument_parser_containing_program_flag_information():
 
 def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
                                path_to_sub_reddit_file=SUB_REDDIT_LIST, reddit=API_INSTANCE):
-    """
-    Appends a sub_reddit to the end of the file that is given by the user.
+    """Appends a sub_reddit to the end of the file that is given by the user.
 
     Arguments:
         parsed_command_line_arguments {namespace} -- Namespace object that contains the values of
@@ -76,8 +70,8 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits
                                          that we will add to.
-                                         (default: {SUB_REDDIT_LIST})
-    """
+                                         (default: {SUB_REDDIT_LIST})"""
+
     # We only want to add a subreddit to the list one time,
     # so we do not want to allow duplicates. It will ruin our data.
     with open(path_to_sub_reddit_file, 'r') as reddit_file:
@@ -92,8 +86,7 @@ def add_sub_reddit_to_sub_file(parsed_command_line_arguments,
 
 def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
                                  path_to_sub_reddit_file=SUB_REDDIT_LIST):
-    """
-    Removes a sub_reddit (line in the file) to the end of the file that
+    """Removes a sub_reddit (line in the file) to the end of the file that
     is given by the user.
 
     Arguments:
@@ -104,8 +97,7 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
     Keyword Arguments:
         path_to_sub_reddit_file {str} -- Path to a file containing the list of sub_reddits to
                                          remove from.
-                                         (default: {SUB_REDDIT_LIST})
-    """
+                                         (default: {SUB_REDDIT_LIST})"""
 
     # We need to store the content of the file, so that we can write
     # each line back into it (except the one line we want to remove).
@@ -122,8 +114,7 @@ def remove_sub_reddit_in_db_file(parsed_command_line_arguments,
 
 
 def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
-    """
-    Returns a list containing the sub_reddits that a user want to analyze
+    """Returns a list containing the sub_reddits that a user want to analyze
     data off of (given from the path_to_sub_reddit_file)
 
     Keyword Arguments:
@@ -131,22 +122,19 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
                                          (default: {SUB_REDDIT_LIST})
 
     Returns:
-        {list(str)} -- list of sub_reddits that we want to analyze data on.
-    """
+        {list(str)} -- list of sub_reddits that we want to analyze data on."""
 
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
 
 
 def sub_reddit_exists(sub_reddit_name):
-    """
-    Determines whether a given subreddit exists.
+    """Determines whether a given subreddit exists.
 
     Arguments:
         sub_reddit_name {str} -- The subreddit that we wanna find out exists or not.
 
     Returns:
-        bool -- True if subreddit exists, False otherwise.
-    """
+        bool -- True if subreddit exists, False otherwise."""
 
     # The praw API Has NO way way of knowing if a subreddit exists or not.
     # I have tried insane amount of documentation on this.
@@ -160,15 +148,13 @@ def sub_reddit_exists(sub_reddit_name):
 
 def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
                                         reddit_api=API_INSTANCE, number_of_posts=200):
-    """
-    Given a list of sub-reddits from the user, we add all the comments
+    """Given a list of sub-reddits from the user, we add all the comments
     made by reddit users to a list and then return it.
 
     Arguments:
         list_of_sub_reddits {list(str)} -- Contains the names of all the
                                            sub-reddits that a user wants
-                                           to parse comments from.
-
+                                           to parse comments from.\n
         sorted_by {str} -- String that is either 'hot', 'new', or 'top'.
                            Varying on which one is passed in, we will
                            grab data from it's category.
@@ -181,8 +167,7 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
 
     Returns:
         {list(str)} -- List containing all comments from our the subreddits
-                       that the user has in their sub reddit file.
-    """
+                       that the user has in their sub reddit file."""
 
     # Cool, we can now load up a list of submissions from the subreddits that the
     # wants to collect data from. We grab as many posts from each as the user requests.
@@ -214,14 +199,12 @@ def get_collected_data_from_sub_reddits(list_of_sub_reddits, sorted_by,
 
 def add_collected_data_to_database(reddit_submission_comments, sorting_type,
                                    db_collection=DB_COLLECTION):
-    """
-    Put every reddit comment contained in "reddit_submission_comments" into
+    """Put every reddit comment contained in "reddit_submission_comments" into
     the given mongo db database collection.
 
     Arguments:
         reddit_submission_comments {list} -- Contains reddit_comments for a
-                                            particular post stored in strings.
-
+                                            particular post stored in strings.\n
         sorting_type {str} -- This is either 'hot', 'new', or 'top'.
                               We will store this string in the database with each comment object,
                               so that we know which sorting_type it used and can later query by
@@ -230,8 +213,7 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
     Keyword Arguments:
         db_collection {mongoDB Database} -- The database that we are putting
                                             all of the reddit comments in.
-                                            (default: {DB_COLLECTION})
-    """
+                                            (default: {DB_COLLECTION})"""
 
     for submission_comment in reddit_submission_comments:
         # This is a easier form to deal with when storing a comment into the database.
@@ -263,8 +245,8 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             'submission': submission_comment.submission.id,
             'subreddit_name': submission_comment.subreddit.display_name.lower(),
             'subreddit_id': submission_comment.subreddit_id,
-            # This is the special custom field that I added for seeing what sorting type
-            # a sub reddit has.
+
+            # This is the special custom field that I added for seeing what sorting type a sub reddit has.
             'sorting_type': sorting_type
         }
 
@@ -272,19 +254,18 @@ def add_collected_data_to_database(reddit_submission_comments, sorting_type,
             db_collection.insert_one(submission_comment_record)
             print("Added Record:")
             print("__________________________________________________________")
-            print(str(submission_comment_record))
+            print(submission_comment_record)
             print("__________________________________________________________\n")
         except DuplicateKeyError:
             print("Duplicate record found, skipping over it...\n")
 
+
 def get_post_sorting_type_from_user():
-    """
-    Prompt the user to decide the sorting method that they will want to use to collect posts
-    The options are Hot posts, New posts, and Top posts
+    """Prompt the user to decide the sorting method that they will want to use to collect posts
+    The options are Hot posts, New posts, and Top posts.
 
     Returns:
-        str -- string containing either 'hot', 'new', or 'top'
-    """
+        str -- string containing either 'hot', 'new', or 'top'"""
 
     # post_sort_option will contain an integer value that we will use to figure out
     # how the user wants to sort their posts.
