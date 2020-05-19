@@ -72,7 +72,7 @@ def main():
     reddit_analyzer = SubredditAnalyzer(DB_COLLECTION)
 
     # test_subreddit_call(reddit_analyzer)
-    # test_submission_call(reddit_analyzer)
+    test_submission_call(reddit_analyzer)
 
     # Let's compare some results from a very positive reviewed subreddit.
     # compare_subreddit_sorting_type_results('battlestations', number_of_comments=10,

@@ -121,7 +121,7 @@ def get_list_of_sub_reddits(path_to_sub_reddit_file=SUB_REDDIT_LIST):
         path_to_sub_reddit_file {str} -- Path to the file that contains the sub_reddits.
                                          (default: {SUB_REDDIT_LIST})
 
-    Returns:
+    Returns:\n
         {list(str)} -- list of sub_reddits that we want to analyze data on."""
 
     return [sub_reddit.strip() for sub_reddit in open(path_to_sub_reddit_file)]
@@ -309,7 +309,6 @@ def main():
         add_collected_data_to_database(collected_data_from_subreddits, post_sorting_type)
 
         print(f"\n{len(collected_data_from_subreddits)} comments have been collected.")
-
 
     # ADD a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:

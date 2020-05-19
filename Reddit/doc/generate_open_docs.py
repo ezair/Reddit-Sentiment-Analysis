@@ -24,6 +24,8 @@ def main():
     doxyfile_location = 'Doxyfile'
     index_html_location = 'html/index.html'
 
+    chdir('doc/')
+
     if not exists(doxyfile_location):
         raise SystemExit('Error, missing {}'.format(doxyfile_location))
 
@@ -33,6 +35,7 @@ def main():
         raise SystemExit(f'Error, missing {index_html_location}.')
 
     webbrowser.open(join(getcwd(), index_html_location))
+
 
 if __name__ == '__main__':
     main()
