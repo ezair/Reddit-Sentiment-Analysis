@@ -303,11 +303,13 @@ def main():
         post_sorting_type = get_post_sorting_type_from_user()
 
         print("\nCollecting data...")
-        collected_data_from_sub_reddits = \
+        collected_data_from_subreddits = \
             get_collected_data_from_sub_reddits(get_list_of_sub_reddits(), post_sorting_type)
 
-        add_collected_data_to_database(collected_data_from_sub_reddits, post_sorting_type)
-        print("\nData collection completed successfully.")
+        add_collected_data_to_database(collected_data_from_subreddits, post_sorting_type)
+
+        print(f"\n{len(collected_data_from_subreddits)} comments have been collected.")
+
 
     # ADD a subreddit to our subreddit (.sub) file.
     elif command_line_argument_parser.add:

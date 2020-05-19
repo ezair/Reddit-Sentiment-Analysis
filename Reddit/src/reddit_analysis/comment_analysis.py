@@ -302,6 +302,84 @@ class SubredditAnalyzer():
         return average_results_for_subreddit
 
 
+    def get_most_positive_subreddit_analysis_results(self, list_of_subreddits, sorting_type=None,
+                                                     max_number_of_comments_to_analyze=0,
+                                                     max_number_submissions_to_analyze=0):
+        """Return a dict containing the subreddit with the most positive results, the positivity level,
+           of the result, the negativity level of the results.
+
+        Arguments:\n
+            list_of_subreddits {list} -- List containing the subreddits that we will choose from to find
+                                         the most positive.
+
+        Keyword Arguments:\n
+            sorting_type {str} -- The sorting type we will analyze our subreddit to find.
+                                  Must be 'new', 'hot', or 'top' (default: {None})\n
+            max_number_of_comments_to_analyze {int} -- The max number of comments that we will
+                                                       analyze. 0 means we will query everything. (default: {0})\n
+            max_number_submissions_to_analyze {int} -- The max number of submissions that we will analyze.
+                                                       0 Means we will query everything. (default: {0})\n
+
+        Returns:\n
+            dict -- dict in the form {'subreddit': str, 'positive': int, 'negative': int}."""
+
+        most_positive_subreddit = ""
+        most_positive_subreddit = {}
+        
+        for subreddit in list_of_subreddits:
+            analysis_result = self.analyze_subreddit(subreddit, max_number_of_comments_to_analyze=\
+                                                                    max_number_of_comments_to_analyze,
+                                                    max_number_of_submissions_to_analyze=\
+                                                        max_number_submissions_to_analyze,
+                                                    sorting_type=sorting_type)
+
+            if analysis_result['positive'] > most_positive_subreddit['positive']:
+                most_positive_subreddit = analysis_result
+                most_positive_score = analysis_result['positive']
+
+        most_positive_score['subreddit'] = subreddit
+        return most_positive_score
+
+
+    def get_most_negative_subreddit_analysis_results(self, list_of_subreddits, sorting_type=None,
+                                                     max_number_of_comments_to_analyze=0,
+                                                     max_number_submissions_to_analyze=0):
+        """Return a dict containing the subreddit with the most negative results, the positivity level,
+           of the result, the negativity level of the results.
+
+        Arguments:\n
+            list_of_subreddits {list} -- List containing the subreddits that we will choose from to find
+                                         the most positive.
+
+        Keyword Arguments:\n
+            sorting_type {str} -- The sorting type we will analyze our subreddit to find.
+                                  Must be 'new', 'hot', or 'top' (default: {None})\n
+            max_number_of_comments_to_analyze {int} -- The max number of comments that we will
+                                                       analyze. 0 means we will query everything. (default: {0})\n
+            max_number_submissions_to_analyze {int} -- The max number of submissions that we will analyze.
+                                                       0 Means we will query everything. (default: {0})\n
+
+        Returns:\n
+            dict -- dict in the form {'subreddit': str, 'positive': int, 'negative': int}."""
+
+        most_negative_subreddit = ""
+        most_negative_subreddit = {}
+        
+        for subreddit in list_of_subreddits:
+            analysis_result = self.analyze_subreddit(subreddit, max_number_of_comments_to_analyze=\
+                                                                    max_number_of_comments_to_analyze,
+                                                    max_number_of_submissions_to_analyze=\
+                                                        max_number_submissions_to_analyze,
+                                                    sorting_type=sorting_type)
+
+            if analysis_result['negative'] > most_negative_subreddit['negative']:
+                most_negative_subreddit = analysis_result
+                most_negative_score = analysis_result['negative']
+
+        most_positive_score['subreddit'] = subreddit
+        return most_negative_score
+
+
     # Later, once I implement word bubble and freq analysis.
     def show_hotest_submission_topics(self, submission_id):
         pass
