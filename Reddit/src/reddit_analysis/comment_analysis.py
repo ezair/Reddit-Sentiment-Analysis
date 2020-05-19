@@ -241,7 +241,7 @@ class SubredditAnalyzer():
             subreddit_submission_ids = self.__reddit_collection.find({'subreddit_name': subreddit_name}
                                                                      ).distinct('submission')
 
-        # No posts found in subreddit.
+        # No posts found in subreddit, there is not point in analyzing, just return now.
         if len(subreddit_submission_ids) == 0:
             if display_all_comment_results or display_all_submission_results:
                 print(f'No submissions were found for the subreddit {subreddit_name}.')
@@ -272,7 +272,7 @@ class SubredditAnalyzer():
             average_results_for_subreddit['positive'] += analysis_results_of_submission['positive']
             average_results_for_subreddit['negative'] += analysis_results_of_submission['negative']
 
-            # They want to see the rating for each submission post.
+            # They want to see the rating for each submission post over time.
             if display_all_submission_results:
                 print(f'Subreddit: {subreddit_name}:')
                 print(f'Submission_id: {submission_id}:')
@@ -283,10 +283,11 @@ class SubredditAnalyzer():
 
         # We can use this as our divisor in following calculations, so that we can
         # get average score for positivity and the average score for negativity.
-        total_sum_of_all_submission_scores = average_results_for_subreddit['positive'] + \
+        total_sum_of_all_submission_scores = average_results_for_subreddit['positive'] +\
                                              average_results_for_subreddit['negative']
 
         # We don't want to divide by zero.
+        # We would get to this point if all results were evaluated as neutral in an odd case.
         if total_sum_of_all_submission_scores != 0:
             average_results_for_subreddit['positive'] /= total_sum_of_all_submission_scores
             average_results_for_subreddit['negative'] /= total_sum_of_all_submission_scores
