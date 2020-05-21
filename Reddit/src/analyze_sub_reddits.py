@@ -71,8 +71,11 @@ def compare_subreddit_sorting_type_results(subreddit, number_of_comments=0,
 def main():
     reddit_analyzer = SubredditAnalyzer(DB_COLLECTION)
 
-    # test_subreddit_call(reddit_analyzer)
-    test_submission_call(reddit_analyzer)
+    # Example of analyzing an entire subreddit.
+    test_subreddit_call(reddit_analyzer)
+    
+    # Example of analyzing a specific submission.
+    #test_submission_call(reddit_analyzer)
 
     # Let's compare some results from a very positive reviewed subreddit.
     # compare_subreddit_sorting_type_results('battlestations', number_of_comments=10,
@@ -81,7 +84,14 @@ def main():
     # Now, let's comare results on a much more negative subreddit.
     # NOTICE: The results are MUCH higher for negativity and MUCH lower for positivity.
     # compare_subreddit_sorting_type_results('holdmyfeedingtube', number_of_comments=10,
-    #                                        number_of_submissions=10)
+    #                                         number_of_submissions=10)
+
+
+    # THis code will show what the value we return from the analyze_subreddit() method looks like.
+    # results_dict = reddit_analyzer.analyze_subreddit('battlestations',
+    #                                                  max_number_of_comments_to_analyze=10,
+    #                                                  max_number_of_submissions_to_analyze=5)
+    # print(results_dict)
 
 
 if __name__ == '__main__':
