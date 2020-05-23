@@ -219,7 +219,7 @@ When I started out the project, I decided that if a analysis result had a higher
 
 The only exception to the above was if I would find a result that was highly neutral and did not have a positivity score, or highly neutral and did not have a negativity score. In this specific case I decided to take that result and classify it. This was actually a good decision because, I started noticing that the overall results began to actually lean more to a certain direction. There were a lot of comments that were not being analyzed simply because they were too neutral, but a lot of these comments had a high neutral score and a score of zero for positive. In this case it was negative. Similarly if the score was high for neutral and had a score for positive, but no score for negative, then the comment is classified as positive. This allowed me to have a larger pool of data to compare. With more comments in the dataset, a single result becomes less meaningful, which is good, because then our results are not as heavily affected by one single comment.
 
-Using the polarity score of a given comment, I was able to make the decision that if the comment had a polarity >= 0.5, then it was positive, and if it was < -0.5, then it was negative. If either of the cases was not true, we ignore the comment, unless it has no score for positive and has a score for negative, or vice versa.
+Using the polarity score of a given comment, I was able to make the decision that if the comment had a polarity >= 0.05, then it was positive, and if it was < -0.05, then it was negative. If either of the cases was not true, we ignore the comment, unless it has no score for positive and has a score for negative, or vice versa.
 
 #### Code for classification decision of a single comment
 
